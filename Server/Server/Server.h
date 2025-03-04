@@ -2,33 +2,34 @@
 #include <WinSock2.h>
 #include <vector>
 #include <thread>
+#include "ClientContext.h"
+#include "PlaneDataStorage.h"
 
-#define MAXTHREADS 10
-#define BUFFER_SIZE 512
+#define PORT 8080
+
+/*
+https://learn.microsoft.com/en-us/windows/win32/fileio/i-o-completion-ports
+*/
 
 
 class Server
 {
 public:
 
-	Server(int MaxThreads = MAXTHREADS);
-
+	Server(int port = PORT);
 	~Server();
+
+    void MainThread();
 
 
 private:
-    struct PerClientContext {
-        SOCKET clientSocket;
-        OVERLAPPED overlapped;
-        WSABUF wsaBuf;
-        char buffer[BUFFER_SIZE];
-        DWORD bytesReceived;
-    };
+	int port;
+	SOCKET serverSocket;
+	WSAData wsaData;
+	HANDLE hIOCP;
+	PlaneDataStorage pds;
+	int nextClientId;
 
-    SOCKET serverSocket;
-    HANDLE hIOCP;
-    std::vector<std::thread> workers;
-
-
+	void WorkerThread();
 };
 
