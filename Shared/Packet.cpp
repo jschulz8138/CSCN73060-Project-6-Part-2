@@ -49,3 +49,11 @@ bool validateTelemetryData()
 {
 	return this->telementryData.validateTelemetryData();
 }
+
+ProtocolFlag Packet::getFlag() const {
+	return protocolFlag;
+}
+
+int Packet::getId() const {
+	return uniqueId;
+}
