@@ -4,23 +4,22 @@
 #include <thread>
 #include "ClientContext.h"
 #include "PlaneDataStorage.h"
+#include "Logger.h"
 
 #define PORT 8080
+#define BUFFER_SIZE 512
 
 /*
 https://learn.microsoft.com/en-us/windows/win32/fileio/i-o-completion-ports
 */
 
-
 class Server
 {
 public:
-
 	Server(int port = PORT);
 	~Server();
 
     void MainThread();
-
 
 private:
 	int port;
@@ -28,8 +27,7 @@ private:
 	WSAData wsaData;
 	HANDLE hIOCP;
 	PlaneDataStorage pds;
-	int nextClientId;
+	Logger logger;
 
 	void WorkerThread();
 };
-
