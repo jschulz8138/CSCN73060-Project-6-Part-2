@@ -4,7 +4,6 @@
 Server::Server(int port)
 {
 	this->port = port;
-	this->nextClientId = 1;
 
 	if (WSAStartup(MAKEWORD(2, 2), &this->wsaData) != 0)
 		throw std::runtime_error("Failed to start up WSA.");
@@ -59,18 +58,24 @@ void Server::MainThread()
 		SOCKET clientSocket = accept(this->serverSocket, (sockaddr*)&clientAddr, &clientAddrSize);
 		if (clientSocket == INVALID_SOCKET)
 		{
-			//Log this and begin the next client connection.
-			//"Failed to setup client socket."
+			this->logger.logMessage("Failed to setup client socket.");
 			continue;
 		}
 
-		int clientId = nextClientId++;
-		ClientContext* clientContext = new ClientContext(clientSocket, clientId);
+		int clientId = this->pds.generateNewId();
+		ClientContext* clientContext = new ClientContext();
+		clientContext->clientSocket = clientSocket;
+		clientContext->buffer.resize(BUFFER_SIZE);
+		clientContext->wsaBuf.buf = clientContext->buffer.data();
+		clientContext->wsaBuf.len = BUFFER_SIZE;
+		ZeroMemory(&clientContext->overlapped, sizeof(OVERLAPPED));
+
 
 		if (CreateIoCompletionPort((HANDLE)clientSocket, this->hIOCP, (ULONG_PTR)clientContext, 0) == NULL)
 		{
-			//Log this and begin the next client connection.
-			//"Failed to associate client socket with IOCP."
+			this->logger.logMessage("Failed to associate client socket with IOCP.");
+			closesocket(clientSocket);
+			delete clientContext;  // Free memory
 			continue;
 		}
 
@@ -85,10 +90,10 @@ void Server::MainThread()
 
 		if (result == SOCKET_ERROR && WSAGetLastError() != WSA_IO_PENDING)
 		{
-			//Log this and begin the next client connection.
-			//WSARecv has failed. Clean up the client connection and accept a new connection.
-			delete clientContext;
+			this->logger.logMessage("WSARecv has failed. Clean up the client connection and accept a new connection.");
 			closesocket(clientSocket);
+			delete clientContext;
+			continue;
 		}
 	}
 }
