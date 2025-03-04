@@ -128,19 +128,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Date.cpp" />
     <ClCompile Include="Main.cpp" />
-    <ClCompile Include="Packet.cpp" />
     <ClCompile Include="Server.cpp" />
-    <ClCompile Include="TelemetryData.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Date.h" />
-    <ClInclude Include="FuelType.h" />
-    <ClInclude Include="Packet.h" />
-    <ClInclude Include="ProtocolFlag.h" />
     <ClInclude Include="Server.h" />
-    <ClInclude Include="TelemetryData.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
