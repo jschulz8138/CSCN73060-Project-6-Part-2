@@ -11,7 +11,7 @@ public:
 	Packet(ProtocolFlag protocolFlag, int uniqueId, TelemetryData telementryData);
 	Packet(std::vector<char> RxBuffer);
 
-	std::vector<char> SerializeData() const;
+	std::vector<char> SerializeData();
 	size_t size() const;
 
 	bool validateTelemetryData();

@@ -1,6 +1,6 @@
 #include "Date.h"
 
-Date::Date(const char* date )
+Date::Date(const char* date)
 {
     struct tm tm = {};
     std::istringstream ss(date);

@@ -45,9 +45,9 @@ size_t Packet::size() const
 	return sizeof(int) + sizeof(int) + this->telementryData.size();	//Protocol Flag, UniqueId, Telemetry Data
 }
 
-bool validateTelemetryData()
+bool Packet::validateTelemetryData()
 {
-	return this->telementryData.validateTelemetryData();
+	return true;
 }
 
 ProtocolFlag Packet::getFlag() const {

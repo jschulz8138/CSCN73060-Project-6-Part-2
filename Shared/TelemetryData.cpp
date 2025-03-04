@@ -15,7 +15,7 @@ TelemetryData::TelemetryData(std::vector<char> RxBuffer)
 	size_t dateSize;
 	std::memcpy(&dateSize, BufferPtr, sizeof(size_t));
 	BufferPtr += sizeof(size_t);
-	
+
 	//Deserialize date string
 	std::string dateStr;
 	dateStr.resize(dateSize);
@@ -65,7 +65,7 @@ std::vector<char> TelemetryData::SerializeData()
 
 size_t TelemetryData::size() const
 {
-	return sizeof(size_t) + this->date.size() + sizeof(float) + sizeof(int); 
+	return sizeof(size_t) + this->date.size() + sizeof(float) + sizeof(int);
 }
 
 bool TelemetryData::validateTeletryData()
