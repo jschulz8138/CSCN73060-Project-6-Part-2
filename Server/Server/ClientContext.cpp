@@ -1,3 +1,4 @@
+//#pragma comment(lib, "Ws2_32.lib")
 //#include "ClientContext.h"
 //
 //ClientContext::ClientContext(SOCKET clientSocket, int uniqueId)

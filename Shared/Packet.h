@@ -11,10 +11,12 @@ public:
 	Packet(ProtocolFlag protocolFlag, int uniqueId, TelemetryData telementryData);
 	Packet(std::vector<char> RxBuffer);
 
-	std::vector<char> SerializeData();
+	std::vector<char> SerializeData() const;
 	size_t size() const;
 
 	bool validateTelemetryData();
+	ProtocolFlag getFlag() const;
+	int getId() const;
 
 private:
 	ProtocolFlag protocolFlag;
