@@ -67,3 +67,9 @@ size_t TelemetryData::size() const
 {
 	return sizeof(size_t) + this->date.size() + sizeof(float) + sizeof(int); 
 }
+
+bool TelemetryData::validateTeletryData()
+{
+	//Basically, just make sure that all attributes are not null, not zero, not a data of 01/01/1900 etc
+	return true;
+}

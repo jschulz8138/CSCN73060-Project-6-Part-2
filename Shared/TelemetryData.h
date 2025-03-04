@@ -10,6 +10,8 @@ public:
 	TelemetryData(Date date, float fuel, FuelType fuelType);
 	std::vector<char> SerializeData();
 	size_t size() const;
+
+	bool validateTeletryData();
 private:
 	Date date;
 	float fuel;

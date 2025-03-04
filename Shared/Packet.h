@@ -14,6 +14,7 @@ public:
 	std::vector<char> SerializeData();
 	size_t size() const;
 
+	bool validateTelemetryData();
 
 private:
 	ProtocolFlag protocolFlag;
