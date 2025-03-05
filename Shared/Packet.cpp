@@ -51,9 +51,14 @@ bool Packet::validateTelemetryData()
 }
 
 ProtocolFlag Packet::getFlag() const {
-	return protocolFlag;
+	return this->protocolFlag;
 }
 
 int Packet::getId() const {
-	return uniqueId;
+	return this->uniqueId;
+}
+
+TelemetryData Packet::getTelemetryData()
+{
+	return this->telementryData;
 }
