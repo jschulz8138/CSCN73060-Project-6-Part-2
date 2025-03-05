@@ -43,25 +43,28 @@ Server::~Server()
 		throw std::runtime_error("Failed to clean up WSA.");
 }
 
+//Bourgeoisie
 void Server::MainThread()
 {
-	//Create my workers 
-	for (int i = 0; i < std::thread::hardware_concurrency(); ++i) {
-		std::thread worker(&Server::WorkerThread, this);
-		worker.detach();
+	//Create my workers
+	//-1 because the main thread is processing the entire time.
+	std::vector<std::thread> workerThreads;
+	for (int i = 0; i < std::thread::hardware_concurrency() - 1; ++i) {
+		workerThreads.push_back(std::thread(&Server::WorkerThread, this));
 	}
 
 	sockaddr_in clientAddr;
 	int clientAddrSize = sizeof(clientAddr);
 
 	while (true) {
+		//Make a new friend
 		SOCKET clientSocket = accept(this->serverSocket, (sockaddr*)&clientAddr, &clientAddrSize);
-		if (clientSocket == INVALID_SOCKET)
-		{
+		if (clientSocket == INVALID_SOCKET) {
 			this->logger.logMessage("Failed to setup client socket.");
 			continue;
 		}
 
+		//Setup the client context struct.
 		int clientId = this->pds.generateNewId();
 		ClientContext* clientContext = new ClientContext();
 		clientContext->clientSocket = clientSocket;
@@ -70,12 +73,10 @@ void Server::MainThread()
 		clientContext->wsaBuf.len = BUFFER_SIZE;
 		ZeroMemory(&clientContext->overlapped, sizeof(OVERLAPPED));
 
-
-		if (CreateIoCompletionPort((HANDLE)clientSocket, this->hIOCP, (ULONG_PTR)clientContext, 0) == NULL)
-		{
+		if (CreateIoCompletionPort((HANDLE)clientSocket, this->hIOCP, (ULONG_PTR)clientContext, 0) == NULL) {
 			this->logger.logMessage("Failed to associate client socket with IOCP.");
 			closesocket(clientSocket);
-			delete clientContext;  // Free memory
+			delete clientContext;
 			continue;
 		}
 
@@ -84,21 +85,90 @@ void Server::MainThread()
 		Packet idPacket(ProtocolFlag::GENERATEID, clientId, TelemetryData());
 		std::vector<char> serializedPacket = idPacket.SerializeData();
 
-		DWORD flags = 0;
-		DWORD bytesRecieved = 0;
-		int result = WSARecv(clientSocket, &clientContext->wsaBuf, 1, &bytesRecieved, &flags, &clientContext->overlapped, nullptr);
+		if (send(clientSocket, serializedPacket.data(), serializedPacket.size(), 0) == SOCKET_ERROR) {
+			this->logger.logMessage("Failed to send GENERATEID packet.");
+			closesocket(clientSocket);
+			delete clientContext;
+			continue;
+		}
 
-		if (result == SOCKET_ERROR && WSAGetLastError() != WSA_IO_PENDING)
-		{
-			this->logger.logMessage("WSARecv has failed. Clean up the client connection and accept a new connection.");
+		//Post the first recv request before moving on to the next client.
+		//Remember, WSARecv is non blocking and it only collect the current cient
+		DWORD flags = 0;
+		if (WSARecv(clientSocket, &clientContext->wsaBuf, 1, nullptr, &flags, &clientContext->overlapped, nullptr) == SOCKET_ERROR) {
+			this->logger.logMessage("WSARecv failed on first read. Closing connection.");
 			closesocket(clientSocket);
 			delete clientContext;
 			continue;
 		}
 	}
+
+	//Join threads during shutdown
+	for (std::thread& worker : workerThreads) {
+		if (worker.joinable()){
+			worker.join();
+		}
+	}
 }
 
+//Proletariat
 void Server::WorkerThread()
 {
+	DWORD bytesTranferred;
+	ClientContext* clientContext;
+	OVERLAPPED* overlapped;
 
+	while (true){
+		if (!GetQueuedCompletionStatus(this->hIOCP, &bytesTranferred, (PULONG_PTR)&clientContext, &overlapped, INFINITE)) {
+			this->logger.logMessage("Failure while dequeuing IOCP. Cleaning up the client connection.");
+			closesocket(clientContext->clientSocket);
+			delete clientContext;
+			continue;
+		}
+
+		if(bytesTranferred == 0){
+			this->logger.logMessage("Client has disconnected. Cleaning up the client connection.");
+			closesocket(clientContext->clientSocket);
+			delete clientContext;
+			continue;
+		}
+
+		//Process the packet
+		Packet receivedPacket = Packet(clientContext->buffer);
+		if (!receivedPacket.validateTelemetryData()) {
+			this->logger.logMessage("Received packet has not been deserialized properly");
+			closesocket(clientContext->clientSocket);
+			delete clientContext;
+			continue;
+		}
+
+		switch (receivedPacket.getFlag()) {
+		case ProtocolFlag::SENDDATA:
+			this->pds.storeTelemetryData(receivedPacket.getId(), receivedPacket.getTelemetryData());
+			break;
+		case ProtocolFlag::ENDCOMMUNICATION:
+			this->pds.storeAverage(receivedPacket.getId());
+			closesocket(clientContext->clientSocket);
+			delete clientContext;
+			continue;
+		default:
+			this->logger.logMessage("Received packet with an unknown flag.");
+			closesocket(clientContext->clientSocket);
+			delete clientContext;
+			continue;
+		}
+
+		Packet ackPacket(ProtocolFlag::ACK, 0, TelemetryData());
+		std::vector<char> serializedAck = ackPacket.SerializeData();
+		send(clientContext->clientSocket, serializedAck.data(), serializedAck.size(), 0);
+
+		ZeroMemory(&clientContext->overlapped, sizeof(OVERLAPPED));
+		DWORD flags = 0;
+		if (WSARecv(clientContext->clientSocket, &clientContext->wsaBuf, 1, nullptr, &flags, &clientContext->overlapped, nullptr) == SOCKET_ERROR) {
+			this->logger.logMessage("WSARecv failed. Closing connection.");
+			closesocket(clientContext->clientSocket);
+			delete clientContext;
+			continue;
+		}
+	}
 }

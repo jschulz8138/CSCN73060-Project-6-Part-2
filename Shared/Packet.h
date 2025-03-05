@@ -17,6 +17,7 @@ public:
 	bool validateTelemetryData();
 	ProtocolFlag getFlag() const;
 	int getId() const;
+	TelemetryData getTelemetryData();
 
 private:
 	ProtocolFlag protocolFlag;
