@@ -6,8 +6,8 @@
 #define MAXTHREADS 10
 
 
-int main(int argc, char* argv[], char* envp[]) {
-	if (argc) {
+int main(int argc, char* argv[]) {
+	Server server = Server(8080);
 
-	}
+	server.MainThread();
 }
