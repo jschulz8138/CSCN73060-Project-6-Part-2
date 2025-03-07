@@ -4,4 +4,5 @@ enum ProtocolFlag {
 	SENDDATA = 1,
 	ENDCOMMUNICATION = 2,
 	ACK = 3
+	//maybe more flags
 };
