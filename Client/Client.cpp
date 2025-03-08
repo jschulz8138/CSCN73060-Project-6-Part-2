@@ -19,7 +19,7 @@ bool Client::Connect() {
     sockaddr_in serverAddr = {};
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(SERVER_PORT);
-    InetPtonA(AF_INET, "127.0.0.1", &serverAddr.sin_addr);
+    InetPtonA(AF_INET, "127.0.0.1", &serverAddr.sin_addr); // *********************** REPLACE CURRENT IP WITH THE IP OF SERVER PC ***********************
 
     if (connect(this->clientSocket, (sockaddr*)&serverAddr, sizeof(serverAddr)) != 0)
         return false;
