@@ -13,7 +13,7 @@ public:
 	std::vector<char> SerializeData() override;
 	size_t size() const override;
 
-	bool validateTelemetryData() override;
+	bool validateData() override;
 	ProtocolFlag getFlag() const override;
 	int getId() const override;
 private:

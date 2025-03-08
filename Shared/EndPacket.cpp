@@ -22,7 +22,6 @@ EndPacket::EndPacket(std::vector<char> RxBuffer)
 
 std::vector<char> EndPacket::SerializeData()
 {
-
 	// Only need to Serialize Flag and ID for EndCommunication
 	std::vector<char> TxBuffer(this->size());
 	char* BufferPtr = TxBuffer.data();
@@ -36,12 +35,12 @@ std::vector<char> EndPacket::SerializeData()
 
 size_t EndPacket::size() const
 {
-	return sizeof(int) + sizeof(int);	//Protocol Flag, UniqueId
+	return sizeof(ProtocolFlag) + sizeof(int);	//Protocol Flag, UniqueId
 }
 
-bool EndPacket::validateTelemetryData()
+bool EndPacket::validateData()
 {
-	return true;
+	return this->protocolFlag == ProtocolFlag::ENDCOMMUNICATION && this->uniqueId > 0;
 }
 
 // ********** GETTERS **********
@@ -54,5 +53,5 @@ int EndPacket::getId() const {
 }
 
 EndPacket::~EndPacket() {
-	// Deconstructor stuff?
+	//No extra cleanup needed. Default is fine.
 }

@@ -46,12 +46,12 @@ std::vector<char> SendPacket::SerializeData()
 
 size_t SendPacket::size() const
 {
-	return sizeof(int) + sizeof(int) + this->telemetryData.size();	//Protocol Flag, UniqueId, Telemetry Data
+	return sizeof(ProtocolFlag) + sizeof(int) + this->telemetryData.size();	//Protocol Flag, UniqueId, Telemetry Data
 }
 
-bool SendPacket::validateTelemetryData()
+bool SendPacket::validateData()
 {
-	return true;
+	return this->protocolFlag == ProtocolFlag::SENDDATA && this->uniqueId > 0 && this->telemetryData.validateTeletryData();
 }
 
 // ********** GETTERS **********
@@ -69,5 +69,5 @@ TelemetryData SendPacket::getTelemetryData()
 }
 
 SendPacket::~SendPacket() {
-	// Deconstructor stuff?
+	//No extra cleanup needed. Default is fine.
 }

@@ -27,12 +27,12 @@ std::vector<char> AckPacket::SerializeData() {
 }
 
 size_t AckPacket::size() const{
-	return sizeof(int) + sizeof(int);	//Protocol Flag
+	return sizeof(ProtocolFlag); 	//Protocol Flag
 }
 
 // ********** GETTERS **********
-bool AckPacket::validateTelemetryData() {
-	return true;
+bool AckPacket::validateData() {
+	return this->protocolFlag == ProtocolFlag::ACK;
 }
 
 ProtocolFlag AckPacket::getFlag() const{
@@ -40,5 +40,5 @@ ProtocolFlag AckPacket::getFlag() const{
 }
 
 AckPacket::~AckPacket() {
-	// Deconstructor stuff?
+	//No extra cleanup needed. Default is fine.
 }

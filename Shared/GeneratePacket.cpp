@@ -22,7 +22,6 @@ GeneratePacket::GeneratePacket(std::vector<char> RxBuffer)
 
 std::vector<char> GeneratePacket::SerializeData()
 {
-
 	// Only need to Serialize Flag and ID for GenerateId
 	std::vector<char> TxBuffer(this->size());
 	char* BufferPtr = TxBuffer.data();
@@ -36,12 +35,13 @@ std::vector<char> GeneratePacket::SerializeData()
 
 size_t GeneratePacket::size() const
 {
-	return sizeof(int) + sizeof(int);	//Protocol Flag, UniqueId
+	return sizeof(ProtocolFlag) + sizeof(int);	//Protocol Flag, UniqueId
 }
 
-bool GeneratePacket::validateTelemetryData()
+//TO make sure deserialization worked
+bool GeneratePacket::validateData()
 {
-	return true;
+	return this->protocolFlag == ProtocolFlag::GENERATEID && this->uniqueId > 0;
 }
 
 // ********** GETTERS **********
@@ -54,5 +54,5 @@ int GeneratePacket::getId() const {
 }
 
 GeneratePacket::~GeneratePacket() {
-	// Deconstructor stuff?
+	//No extra cleanup needed. Default is fine.
 }

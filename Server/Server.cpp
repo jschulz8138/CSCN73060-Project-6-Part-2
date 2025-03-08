@@ -86,7 +86,14 @@ void Server::MainThread()
 
 		//We can use trash Telemetry Data here
 		//FIX TELEMETRY DATA HERE
-		Packet idPacket = PacketFactory::create(ProtocolFlag::GENERATEID, clientId);
+		Packet idPacket;
+		try {
+			idPacket = PacketFactory::create(ProtocolFlag::GENERATEID, clientId);
+		}
+		catch (const std::exception& e) {
+			this->logger.logMessage("Failure whiile using the packet factory for an ACK Packet.");
+		}
+		
 		std::vector<char> serializedPacket = idPacket.SerializeData();
 
 		if (send(clientSocket, serializedPacket.data(), serializedPacket.size(), 0) == SOCKET_ERROR) {
@@ -122,6 +129,15 @@ void Server::WorkerThread()
 	ClientContext* clientContext;
 	OVERLAPPED* overlapped;
 
+	Packet ackPacket;
+	try {
+		ackPacket = PacketFactory::create(ProtocolFlag::ACK);
+	}
+	catch (const std::exception& e) {
+		this->logger.logMessage("Failure whiile using the packet factory for an ACK Packet.");
+	}
+	std::vector<char> serializedAck = ackPacket.SerializeData();
+
 	while (true){
 		if (!GetQueuedCompletionStatus(this->hIOCP, &bytesTranferred, (PULONG_PTR)&clientContext, &overlapped, INFINITE)) {
 			this->logger.logMessage("Failure while dequeuing IOCP. Cleaning up the client connection.");
@@ -138,8 +154,15 @@ void Server::WorkerThread()
 		}
 
 		//Process the packet
-		Packet receivedPacket = PacketFactory::create(clientContext->buffer);
-		if (!receivedPacket.validateTelemetryData()) {
+		Packet receivedPacket;
+		try {
+			receivedPacket = PacketFactory::create(clientContext->buffer);
+		}
+		catch (const std::exception& e) {
+			this->logger.logMessage("Failure while deserializing the recievedPacket");
+		}
+
+		if (!receivedPacket.validateData()) {
 			this->logger.logMessage("Received packet has not been deserialized properly");
 			closesocket(clientContext->clientSocket);
 			delete clientContext;
@@ -162,8 +185,6 @@ void Server::WorkerThread()
 			continue;
 		}
 
-		Packet ackPacket = PacketFactory::create(ProtocolFlag::ACK);
-		std::vector<char> serializedAck = ackPacket.SerializeData();
 		send(clientContext->clientSocket, serializedAck.data(), serializedAck.size(), 0);
 
 		ZeroMemory(&clientContext->overlapped, sizeof(OVERLAPPED));
