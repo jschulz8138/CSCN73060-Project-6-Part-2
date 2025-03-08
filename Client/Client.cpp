@@ -43,7 +43,7 @@ Packet Client::ReceivePacket() {
     if (bytesReceived <= 0)
         throw std::runtime_error("Failed to receive packet.");
 
-    return Packet(std::vector<char>(buffer, buffer + bytesReceived));
+    return PacketFactory::create(std::vector<char>(buffer, buffer + bytesReceived));
 }
 
 void Client::Run() {
@@ -60,7 +60,7 @@ void Client::Run() {
     // Send multiple data packets
     for (int i = 0; i < 5; i++) {
         TelemetryData telemetry(Date("3_4_2025"), i * 10.0f, FuelType::GALLONS);  // Example data
-        Packet dataPacket(ProtocolFlag::SENDDATA, uniqueId, telemetry);
+        Packet dataPacket = PacketFactory::create(ProtocolFlag::SENDDATA, uniqueId, telemetry);
         SendPacket(dataPacket);
 
         // Wait for acknowledgment
@@ -70,7 +70,7 @@ void Client::Run() {
     }
 
     // End communication
-    Packet endPacket(ProtocolFlag::ENDCOMMUNICATION, uniqueId, TelemetryData(Date("3_4_2025"), 10.0f, FuelType::GALLONS));  // Example data
+    Packet endPacket = PacketFactory::create(ProtocolFlag::ENDCOMMUNICATION, uniqueId);  // Example data
     SendPacket(endPacket);
 
     std::cout << "Communication ended." << std::endl;

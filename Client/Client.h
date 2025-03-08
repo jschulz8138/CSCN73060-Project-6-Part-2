@@ -3,7 +3,11 @@
 #include <WinSock2.h>
 #include <ws2tcpip.h>
 #include <iostream>
-#include "../Shared/Packet.h"
+#include "../Shared/GeneratePacket.h"
+#include "../Shared/SendPacket.h"
+#include "../Shared/EndPacket.h"
+#include "../Shared/AckPacket.h"
+#include "../Shared/PacketFactory.h"
 
 #define SERVER_IP "127.0.0.1"
 #define SERVER_PORT 8080

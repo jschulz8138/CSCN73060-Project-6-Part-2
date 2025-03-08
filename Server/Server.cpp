@@ -1,5 +1,9 @@
 #include "Server.h"
-#include "../Shared/Packet.h"
+#include "../Shared/GeneratePacket.h"
+#include "../Shared/SendPacket.h"
+#include "../Shared/EndPacket.h"
+#include "../Shared/AckPacket.h"
+#include "../Shared/PacketFactory.h"
 
 Server::Server(int port)
 {
@@ -82,7 +86,7 @@ void Server::MainThread()
 
 		//We can use trash Telemetry Data here
 		//FIX TELEMETRY DATA HERE
-		Packet idPacket(ProtocolFlag::GENERATEID, clientId, TelemetryData());
+		Packet idPacket = PacketFactory::create(ProtocolFlag::GENERATEID, clientId);
 		std::vector<char> serializedPacket = idPacket.SerializeData();
 
 		if (send(clientSocket, serializedPacket.data(), serializedPacket.size(), 0) == SOCKET_ERROR) {
@@ -134,7 +138,7 @@ void Server::WorkerThread()
 		}
 
 		//Process the packet
-		Packet receivedPacket = Packet(clientContext->buffer);
+		Packet receivedPacket = PacketFactory::create(clientContext->buffer);
 		if (!receivedPacket.validateTelemetryData()) {
 			this->logger.logMessage("Received packet has not been deserialized properly");
 			closesocket(clientContext->clientSocket);
@@ -158,7 +162,7 @@ void Server::WorkerThread()
 			continue;
 		}
 
-		Packet ackPacket(ProtocolFlag::ACK, 0, TelemetryData());
+		Packet ackPacket = PacketFactory::create(ProtocolFlag::ACK);
 		std::vector<char> serializedAck = ackPacket.SerializeData();
 		send(clientContext->clientSocket, serializedAck.data(), serializedAck.size(), 0);
 
