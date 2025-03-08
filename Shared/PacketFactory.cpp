@@ -67,4 +67,5 @@ Packet PacketFactory::create(std::vector<char> RxBuffer) { // deserializing cons
     default: {//Default will just throw an error.
         throw std::invalid_argument("Invalid ProtocolFlag");
     }
+    }
 }
