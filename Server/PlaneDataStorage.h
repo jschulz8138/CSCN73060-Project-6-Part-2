@@ -8,10 +8,12 @@ public:
 	int generateNewId();
 	bool storeTelemetryData(int id, TelemetryData telemetryData);
 	bool storeAverage(int id);
+	
+	//PostGRE Statements
+	bool insert();	//The insert statement should take a parameter of the database connection.
+	bool select();	//The select statement should take a parameter of the database connection.
 
 private:
 	std::atomic<int> currentID = 1;
-	//Somesone of Storage. Will need to use a database.
-
+	
 };
-
