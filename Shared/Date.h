@@ -14,6 +14,7 @@ public:
 	operator std::string() const;
 	//Returns the length of the string that will be formed from this date
 	size_t size() const;
+	bool validateDate();
 
 private:
 	time_t date;

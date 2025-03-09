@@ -70,6 +70,5 @@ size_t TelemetryData::size() const
 
 bool TelemetryData::validateTeletryData()
 {
-	//Basically, just make sure that all attributes are not null, not zero, not a data of 01/01/1900 etc
-	return true;
+	return this->date.validateDate() && this->fuel >= 0; //We are going to hope that fueltype always works because cpp is a typed language.
 }

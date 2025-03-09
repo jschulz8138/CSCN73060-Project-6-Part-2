@@ -7,10 +7,20 @@ int PlaneDataStorage::generateNewId()
 
 bool PlaneDataStorage::storeTelemetryData(int id, TelemetryData telemetryData)
 {
-	return true;
+	return false;
 }
 
 bool PlaneDataStorage::storeAverage(int id)
 {
-	return true;
+	return false;
+}
+
+bool PlaneDataStorage::insert()
+{
+	return false;
+}
+
+bool PlaneDataStorage::select()
+{
+	return false;
 }
