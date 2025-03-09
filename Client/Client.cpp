@@ -67,6 +67,11 @@ void Client::Run() {
 
     // Send multiple data packets
     for (int i = 0; i < 5; i++) {
+
+        //------------------------------//
+        // TO-DO: Add reading files here//
+        //------------------------------//
+
         TelemetryData telemetry(Date("3_4_2025"), i * 10.0f, FuelType::GALLONS);  // Example data
 
         Packet dataPacket;
