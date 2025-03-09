@@ -19,10 +19,15 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\Shared\AckPacket.h" />
     <ClInclude Include="..\Shared\Date.h" />
+    <ClInclude Include="..\Shared\EndPacket.h" />
     <ClInclude Include="..\Shared\FuelType.h" />
+    <ClInclude Include="..\Shared\GeneratePacket.h" />
     <ClInclude Include="..\Shared\Packet.h" />
+    <ClInclude Include="..\Shared\PacketFactory.h" />
     <ClInclude Include="..\Shared\ProtocolFlag.h" />
+    <ClInclude Include="..\Shared\SendPacket.h" />
     <ClInclude Include="..\Shared\TelemetryData.h" />
     <ClInclude Include="ClientContext.h" />
     <ClInclude Include="Logger.h" />
@@ -30,8 +35,12 @@
     <ClInclude Include="Server.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\Shared\AckPacket.cpp" />
     <ClCompile Include="..\Shared\Date.cpp" />
-    <ClCompile Include="..\Shared\Packet.cpp" />
+    <ClCompile Include="..\Shared\EndPacket.cpp" />
+    <ClCompile Include="..\Shared\GeneratePacket.cpp" />
+    <ClCompile Include="..\Shared\PacketFactory.cpp" />
+    <ClCompile Include="..\Shared\SendPacket.cpp" />
     <ClCompile Include="..\Shared\TelemetryData.cpp" />
     <ClCompile Include="ClientContext.cpp" />
     <ClCompile Include="Logger.cpp" />
