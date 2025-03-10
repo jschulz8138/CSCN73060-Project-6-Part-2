@@ -17,7 +17,7 @@ https://learn.microsoft.com/en-us/windows/win32/fileio/i-o-completion-ports
 class Server
 {
 public:
-	Server(int port = PORT);
+	Server(int port = PORT, const std::string& dbConnString = );
 	~Server();
 
 	void MainThread();
@@ -31,4 +31,5 @@ private:
 	Logger logger;
 
 	void WorkerThread();
+	float calculateFuelConsumption(TelemetryData previousTelemetryData, TelemetryData newTelemetryData);
 };

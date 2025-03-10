@@ -66,7 +66,7 @@ void Client::Run() {
     std::cout << "Received Unique ID: " << uniqueId << std::endl;
 
     // Send multiple data packets
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 5; i++) {               
         TelemetryData telemetry(Date("3_4_2025"), i * 10.0f, FuelType::GALLONS);  // Example data
 
         Packet dataPacket;
@@ -95,6 +95,8 @@ void Client::Run() {
     }
 
     SendPacket(endPacket);
+
+    //There might need to be client cleanup here? I don't remember.
 
     std::cout << "Communication ended." << std::endl;
 }

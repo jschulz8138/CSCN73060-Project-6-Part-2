@@ -48,6 +48,7 @@ Server::~Server()
 }
 
 //Bourgeoisie
+//This guy is accepting new clients
 void Server::MainThread()
 {
 	//Create my workers
@@ -123,6 +124,8 @@ void Server::MainThread()
 }
 
 //Proletariat
+//Takes the packets and deals with them
+//One packet at a time, not one client at a time.
 void Server::WorkerThread()
 {
 	DWORD bytesTranferred;
@@ -171,10 +174,19 @@ void Server::WorkerThread()
 
 		switch (receivedPacket.getFlag()) {
 		case ProtocolFlag::SENDDATA:
-			this->pds.storeTelemetryData(receivedPacket.getId(), receivedPacket.getTelemetryData());
+			//If this is the first communciation, initialize the prevTimeStamp and prevTelemetryData
+			if (clientContext->isPrevTelemetryDataInitialized) {
+				clientContext->prevTelemetryData = receivedPacket.getTelemetryData();
+				clientContext->isPrevTelemetryDataInitialized = true;
+			}
+			else {
+				this->pds.storeFuelConsumption();
+				clientContext->prevTelemetryData = receivedPacket.getTelemetryData();
+			}
+
 			break;
 		case ProtocolFlag::ENDCOMMUNICATION:
-			this->pds.storeAverage(receivedPacket.getId());
+			this->pds.storeAverageFuelConsumption(receivedPacket.getId());
 			closesocket(clientContext->clientSocket);
 			delete clientContext;
 			continue;
@@ -196,4 +208,9 @@ void Server::WorkerThread()
 			continue;
 		}
 	}
+}
+
+float Server::calculateFuelConsumption(TelemetryData previousTelemetryData, TelemetryData newTelemetryData)
+{
+	return previousTelemetryData.getFuel() - newTelemetryData.getFuel();;
 }
