@@ -5,6 +5,7 @@
 #include <chrono>
 #define HOURS_IN_DAY 24
 #define EST 5
+#define DST 4
 class Date
 {
 public:

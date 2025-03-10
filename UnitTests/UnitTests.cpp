@@ -6,6 +6,7 @@
 #include "../Shared/Packet.h"
 #include "../Shared/FuelType.h"
 #include "../Shared/ProtocolFlag.h"
+#include <iostream>
 
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
@@ -17,10 +18,11 @@ namespace UnitTests
 	public:
 		TEST_METHOD(ConstructorValidDates)
 		{
-			std::vector<const char*> dateString =			{ "3_3_2023 15:53:2",		"4_3_2023 15:53:2",		"3_7_2023 15:53:2", "3_3_2023 12:53:2", "3_3_2023 8:2:2",						"3_3_2023 15:3:2" };
-			std::vector<std::string> expectedDateString =	{ "03_03_2023 15:53:02",	"04_03_2023 15:53:02", "03_07_2023 15:53:02", "03_03_2023 12:53:02", "03_03_2023 08:02:02",	"03_03_2023 15:03:02" };
+			std::vector<const char*> dateString =			{ "03_03_2023 15:53:2",		"4_15_2023 15:53:2",	   "3_7_2023 15:53:2",    "3_3_2023 12:53:2",    "3_3_2023 8:2:2",		"3_3_2023 15:3:2" };
+			std::vector<std::string> expectedDateString =	{ "03_03_2023 15:53:02",	"04_15_2023 15:53:02", "03_07_2023 15:53:02", "03_03_2023 12:53:02", "03_03_2023 08:02:02",	"03_03_2023 15:03:02" };
 			for (int i = 0; i < dateString.size(); i++)
-				Assert::AreEqual(std::string(Date(dateString[i])), expectedDateString[i]);
+				Assert::AreEqual(expectedDateString[i], std::string(Date(dateString[i])));
+
 		}
 		TEST_METHOD(ConstructorInvalidDates)
 		{

@@ -16,8 +16,9 @@ Date::operator std::string() const
 {
     char buffer[80];
     struct tm* tm = localtime(&this->date);
-    tm->tm_mday += (tm->tm_hour + EST) / HOURS_IN_DAY;
-    tm->tm_hour = (tm->tm_hour + EST) % HOURS_IN_DAY;
+    tm->tm_hour += tm->tm_isdst > 0 ? DST : EST;
+    tm->tm_mday += tm->tm_hour / HOURS_IN_DAY;
+    tm->tm_hour %= HOURS_IN_DAY;
     strftime(buffer, sizeof(buffer), "%m_%d_%Y %H:%M:%S", tm);
     return std::string(buffer);
 }
