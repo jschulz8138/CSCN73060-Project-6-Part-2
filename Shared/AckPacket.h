@@ -7,7 +7,7 @@ class AckPacket : public Packet {
 public:
 
 	AckPacket();
-	AckPacket(std::vector<char> RxBuffer);
+	AckPacket(std::vector<char>);
 	~AckPacket();
 
 	std::vector<char> SerializeData() override;
