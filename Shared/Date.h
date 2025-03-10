@@ -3,7 +3,8 @@
 #include <ctime>
 #include <sstream>
 #include <chrono>
-
+#define HOURS_IN_DAY 24
+#define EST 5
 class Date
 {
 public:
