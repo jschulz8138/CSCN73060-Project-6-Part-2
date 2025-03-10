@@ -1,11 +1,11 @@
 #include "pch.h"
 #include "CppUnitTest.h"
-////#include "../Shared/GeneratePacket.h"
-////#include "../Shared/SendPacket.h"
-////#include "../Shared/EndPacket.h"
-////#include "../Shared/AckPacket.h"
-////#include "../Shared/PacketFactory.h"
+#include "../Shared/PacketFactory.h"
 #include "../Shared/Date.h"
+#include "../Shared/TelemetryData.h"
+#include "../Shared/Packet.h"
+#include "../Shared/FuelType.h"
+#include "../Shared/ProtocolFlag.h"
 //
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 //

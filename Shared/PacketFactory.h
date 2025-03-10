@@ -1,6 +1,7 @@
 // Definition of PacketFactory Class
 
 #pragma once
+#include <vector>
 #include "TelemetryData.h"
 #include "GeneratePacket.h"
 #include "SendPacket.h"
