@@ -1,4 +1,5 @@
 #include "Client.h"
+#include "Plane.h"
 
 Client::Client() {
     WSAData wsaData;
@@ -65,14 +66,16 @@ void Client::Run() {
     int uniqueId = idPacket.getId();
     std::cout << "Received Unique ID: " << uniqueId << std::endl;
 
-    // Send multiple data packets
-    for (int i = 0; i < 5; i++) {
+    // set up telemetry reading class
+    Plane plane;
+    bool fileOpened = true;
 
-        //------------------------------//
-        // TO-DO: Add reading files here//
-        //------------------------------//
+    // tries to open files, doesn't read if unsuccessful
+    fileOpened = plane.OpenFuelDataFile("Packet dataPacket;") ? true : false;
 
-        TelemetryData telemetry(Date("3_4_2025"), i * 10.0f, FuelType::GALLONS);  // Example data
+    // reads through file if lines are left
+    while (fileOpened && plane.GetNextFuelData()) {
+        TelemetryData telemetry(plane.GetDate(), plane.GetFuelQuantity(), plane.GetFuelType());
 
         Packet dataPacket;
         try {
@@ -81,13 +84,13 @@ void Client::Run() {
         catch (const std::exception& e) {
             std::cerr << "Failure while deserializing the recievedPacket";
         }
- 
+
         SendPacket(dataPacket);
 
         // Wait for acknowledgment
         Packet ackPacket = ReceivePacket();
         if (ackPacket.getFlag() == ProtocolFlag::ACK)
-            std::cout << "Received ACK for packet " << i + 1 << std::endl;
+            std::cout << "Received ACK for packet " << std::endl;
     }
 
     // End communication
