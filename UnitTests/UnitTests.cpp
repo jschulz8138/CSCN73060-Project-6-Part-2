@@ -46,6 +46,8 @@ namespace UnitTests
 				//Assert::AreEqual(Packets[i].getFlag(), Flags[i]);
 				//Assert::AreEqual(Packets[i].getId(), Ids[i]);
 			//}
+			Packet pkt = PacketFactory::create(SENDDATA, 10, TelemetryData(Date("03_05_2022 15:24:2"), 1, POUNDS));
+			Assert::AreSame((int)SENDDATA, (int)pkt.getFlag());
 
 
 		}
