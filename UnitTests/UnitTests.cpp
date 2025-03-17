@@ -16,15 +16,125 @@ namespace UnitTests
 	TEST_CLASS(PacketFactoryTests)
 	{
 	public:
-		TEST_METHOD(CreateVariant1Tests)
+		TEST_METHOD(SendDataBoundaryTests)
 		{
-			std::unique_ptr<Packet> pkt = PacketFactory::create(ProtocolFlag::SENDDATA, 10, TelemetryData(Date("03_05_2022 15:24:2"), 1, POUNDS));
-			Assert::AreEqual((int)ProtocolFlag::SENDDATA, (int)pkt->getFlag());
-		}
-		//TEST_METHOD(CreateVariant2Tests)
-		//{
+			std::vector<std::unique_ptr<Packet>> pkts;
+			pkts.push_back(PacketFactory::create(ProtocolFlag::SENDDATA, 10, TelemetryData(Date("03_05_2022 15:44:2"), 25, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::SENDDATA, 11, TelemetryData(Date("02_04_2025 12:35:6"), 53, GALLONS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::SENDDATA, 12, TelemetryData(Date("09_06_2022 13:38:2"), 5555353, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::SENDDATA, 14, TelemetryData(Date("03_03_2021 15:26:2"), 633443, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::SENDDATA, 12, TelemetryData(Date("03_03_2021 15:26:2"), 0, POUNDS)));
 
-		//}
+			for (int i = 0; i < pkts.size(); i++) { Assert::AreEqual((int)ProtocolFlag::SENDDATA, (int)pkts[i]->getFlag()); }
+
+			Assert::ExpectException<std::invalid_argument>([&]() { PacketFactory::create(ProtocolFlag::SENDDATA, 13, TelemetryData(Date("08_07_2022 14:27:2"), -3, GALLONS)); });
+			Assert::ExpectException<std::invalid_argument>([&]() { PacketFactory::create(ProtocolFlag::SENDDATA, 13, TelemetryData(Date("08_07_2022 14:27:2"), -100000, POUNDS)); });
+			Assert::ExpectException<std::invalid_argument>([&]() { PacketFactory::create(ProtocolFlag::SENDDATA, 13, TelemetryData(Date("08_07_2022 14:27:2"), -3043023, GALLONS)); });
+
+		}
+		TEST_METHOD(PacketFlagTests)
+		{
+			std::vector<std::unique_ptr<Packet>> pkts;
+			pkts.push_back(PacketFactory::create(ProtocolFlag::GENERATEID, 10, TelemetryData(Date("03_05_2022 15:44:2"), 25, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::GENERATEID, 11, TelemetryData(Date("02_04_2025 12:35:6"), 53, GALLONS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::GENERATEID, 12, TelemetryData(Date("09_06_2022 13:38:2"), 5555353, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::SENDDATA, 14, TelemetryData(Date("03_03_2021 15:26:2"), 633443, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::SENDDATA, 12, TelemetryData(Date("03_03_2021 15:26:2"), 0, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::SENDDATA, 14, TelemetryData(Date("03_03_2021 15:26:2"), 633443, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::ENDCOMMUNICATION, 12, TelemetryData(Date("03_03_2021 15:26:2"), 0, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::ENDCOMMUNICATION, 14, TelemetryData(Date("03_03_2021 15:26:2"), 633443, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::ENDCOMMUNICATION, 12, TelemetryData(Date("03_03_2021 15:26:2"), 0, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::ACK, 14, TelemetryData(Date("03_03_2021 15:26:2"), 633443, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::ACK, 12, TelemetryData(Date("03_03_2021 15:26:2"), 0, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::ACK, 12, TelemetryData(Date("03_03_2021 15:26:2"), 0, POUNDS)));
+
+			std::vector<ProtocolFlag> flags = { GENERATEID, GENERATEID, GENERATEID, SENDDATA, SENDDATA, SENDDATA, ENDCOMMUNICATION, ENDCOMMUNICATION, ENDCOMMUNICATION, ACK, ACK, ACK };
+			for (int i = 0; i < pkts.size(); i++) { Assert::AreEqual((int)flags[i], (int)pkts[i]->getFlag()); }
+		}
+		TEST_METHOD(PacketIdTests)
+		{
+			std::vector<std::unique_ptr<Packet>> pkts;
+			pkts.push_back(PacketFactory::create(ProtocolFlag::GENERATEID, 10, TelemetryData(Date("03_05_2022 15:44:2"), 25, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::GENERATEID, 11, TelemetryData(Date("02_04_2025 12:35:6"), 53, GALLONS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::GENERATEID, 12, TelemetryData(Date("09_06_2022 13:38:2"), 5555353, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::SENDDATA, 13, TelemetryData(Date("03_03_2021 15:26:2"), 633443, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::SENDDATA, 14, TelemetryData(Date("03_03_2021 15:26:2"), 0, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::SENDDATA, 15, TelemetryData(Date("03_03_2021 15:26:2"), 633443, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::ENDCOMMUNICATION, 16, TelemetryData(Date("03_03_2021 15:26:2"), 0, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::ENDCOMMUNICATION, 17, TelemetryData(Date("03_03_2021 15:26:2"), 633443, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::ENDCOMMUNICATION, 18, TelemetryData(Date("03_03_2021 15:26:2"), 0, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::ACK, 19, TelemetryData(Date("03_03_2021 15:26:2"), 633443, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::ACK, 20, TelemetryData(Date("03_03_2021 15:26:2"), 0, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::ACK, 21, TelemetryData(Date("03_03_2021 15:26:2"), 0, POUNDS)));
+
+			//ACK packets will always have the ID be -1?
+			std::vector<int> flags = { 10, 11, 12, 13, 14, 15, 16, 17, 18, -1, -1, -1 };
+			for (int i = 0; i < pkts.size(); i++) { Assert::AreEqual(flags[i], pkts[i]->getId()); }
+		}
+
+		TEST_METHOD(PacketSizeTests)
+		{
+			std::vector<std::unique_ptr<Packet>> pkts;
+			pkts.push_back(PacketFactory::create(ProtocolFlag::GENERATEID, 10, TelemetryData(Date("03_05_2022 15:44:2"), 25, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::GENERATEID, 11, TelemetryData(Date("02_04_2025 12:35:6"), 53, GALLONS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::GENERATEID, 12, TelemetryData(Date("09_06_2022 13:38:2"), 5555353, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::SENDDATA, 13, TelemetryData(Date("03_03_2021 15:26:2"), 633443, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::SENDDATA, 14, TelemetryData(Date("03_03_2021 15:26:2"), 0, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::SENDDATA, 15, TelemetryData(Date("03_03_2021 15:26:2"), 633443, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::ENDCOMMUNICATION, 16, TelemetryData(Date("03_03_2021 15:26:2"), 0, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::ENDCOMMUNICATION, 17, TelemetryData(Date("03_03_2021 15:26:2"), 633443, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::ENDCOMMUNICATION, 18, TelemetryData(Date("03_03_2021 15:26:2"), 0, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::ACK, 19, TelemetryData(Date("03_03_2021 15:26:2"), 633443, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::ACK, 20, TelemetryData(Date("03_03_2021 15:26:2"), 0, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::ACK, 21, TelemetryData(Date("03_03_2021 15:26:2"), 0, POUNDS)));
+
+			std::vector<int> flags = { 8, 8, 8, 43, 43, 43, 8, 8, 8, 4, 4, 4 };
+			for (int i = 0; i < pkts.size(); i++) { Assert::AreEqual(flags[i], (int)pkts[i]->size()); }
+		}
+		TEST_METHOD(PacketTelemetryData)
+		{
+			std::vector<std::unique_ptr<Packet>> pkts;
+			pkts.push_back(PacketFactory::create(ProtocolFlag::GENERATEID, 10, TelemetryData(Date("03_05_2022 15:44:2"), 25, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::GENERATEID, 11, TelemetryData(Date("02_04_2025 12:35:6"), 53, GALLONS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::GENERATEID, 12, TelemetryData(Date("09_06_2022 13:38:2"), 5555353, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::SENDDATA, 13, TelemetryData(Date("03_03_2021 15:26:2"), 633443, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::SENDDATA, 14, TelemetryData(Date("03_03_2021 15:26:2"), 0, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::SENDDATA, 15, TelemetryData(Date("03_03_2021 15:26:2"), 633443, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::ENDCOMMUNICATION, 16, TelemetryData(Date("03_03_2021 15:26:2"), 0, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::ENDCOMMUNICATION, 17, TelemetryData(Date("03_03_2021 15:26:2"), 633443, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::ENDCOMMUNICATION, 18, TelemetryData(Date("03_03_2021 15:26:2"), 0, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::ACK, 19, TelemetryData(Date("03_03_2021 15:26:2"), 633443, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::ACK, 20, TelemetryData(Date("03_03_2021 15:26:2"), 0, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::ACK, 21, TelemetryData(Date("03_03_2021 15:26:2"), 0, POUNDS)));
+
+			for (int i = 0; i < pkts.size(); i++) {  void* ptr = &pkts[i]->getTelemetryData(); Assert::IsNotNull(ptr);  }
+		}
+		TEST_METHOD(PacketValidateTests)
+		{
+			std::vector<std::unique_ptr<Packet>> pkts;
+			pkts.push_back(PacketFactory::create(ProtocolFlag::GENERATEID, 10, TelemetryData(Date("03_05_2022 15:44:2"), 25, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::GENERATEID, 11, TelemetryData(Date("02_04_2025 12:35:6"), 53, GALLONS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::GENERATEID, 12, TelemetryData(Date("09_06_2022 13:38:2"), 5555353, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::SENDDATA, 13, TelemetryData(Date("03_03_2021 15:26:2"), 633443, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::SENDDATA, 14, TelemetryData(Date("03_03_2021 15:26:2"), 0, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::SENDDATA, 15, TelemetryData(Date("03_03_2021 15:26:2"), 633443, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::ENDCOMMUNICATION, 16, TelemetryData(Date("03_03_2021 15:26:2"), 0, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::ENDCOMMUNICATION, 17, TelemetryData(Date("03_03_2021 15:26:2"), 633443, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::ENDCOMMUNICATION, 18, TelemetryData(Date("03_03_2021 15:26:2"), 0, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::ACK, 19, TelemetryData(Date("03_03_2021 15:26:2"), 633443, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::ACK, 20, TelemetryData(Date("03_03_2021 15:26:2"), 0, POUNDS)));
+			pkts.push_back(PacketFactory::create(ProtocolFlag::ACK, 21, TelemetryData(Date("03_03_2021 15:26:2"), 0, POUNDS)));
+
+			for (int i = 0; i < pkts.size(); i++) { Assert::IsTrue(pkts[i]->validateData()); }
+
+			Assert::ExpectException<std::invalid_argument>([&]() { PacketFactory::create(ProtocolFlag::SENDDATA, 13, TelemetryData(Date("08_0732fsd_2022 14:27:2"), -3, GALLONS)); });
+			Assert::ExpectException<std::invalid_argument>([&]() { PacketFactory::create(ProtocolFlag::SENDDATA, 13, TelemetryData(Date("08_07fsd_2022 14:27:2"), -3, GALLONS)); });
+			Assert::ExpectException<std::invalid_argument>([&]() { PacketFactory::create(ProtocolFlag::SENDDATA, 13, TelemetryData(Date("13_07_2022 14:27:2"), -3, GALLONS)); });
+			Assert::ExpectException<std::invalid_argument>([&]() { PacketFactory::create(ProtocolFlag::SENDDATA, 13, TelemetryData(Date("08_76_2022 14:27:2"), -3, GALLONS)); });
+			Assert::ExpectException<std::invalid_argument>([&]() { PacketFactory::create(ProtocolFlag::SENDDATA, 13, TelemetryData(Date("08_07_999022 14:27:2"), -3, GALLONS)); });
+			Assert::ExpectException<std::invalid_argument>([&]() { PacketFactory::create(ProtocolFlag::SENDDATA, 13, TelemetryData(Date("08_07_2022 66:27:2"), -3, GALLONS)); });
+			Assert::ExpectException<std::invalid_argument>([&]() { PacketFactory::create(ProtocolFlag::SENDDATA, 13, TelemetryData(Date("08_07_2022 16:6657:2"), -3, GALLONS)); });
+		}
 	};
 
 	TEST_CLASS(DateUnitTests)
