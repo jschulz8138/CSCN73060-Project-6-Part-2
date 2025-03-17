@@ -3,7 +3,7 @@
 #pragma once
 #include "Packet.h"
 
-class AckPacket : public Packet {
+class AckPacket : public virtual Packet {
 public:
 
 	AckPacket();

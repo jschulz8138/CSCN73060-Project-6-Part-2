@@ -18,38 +18,8 @@ namespace UnitTests
 	public:
 		TEST_METHOD(CreateVariant1Tests)
 		{
-			//std::vector<ProtocolFlag> Flags = { GENERATEID };//, SENDDATA, ENDCOMMUNICATION, ACK, GENERATEID, SENDDATA, ENDCOMMUNICATION, ACK };
-			//std::vector<int> Ids = { 0 };//, 1, 2, 3, 4, 5, 6, 7 };
-			//std::vector<TelemetryData> Data = { 
-				//TelemetryData(Date("03_05_2022 15:24:2"), 1, POUNDS), 
-				//TelemetryData(Date("02_03_2022 05:53:2"), 2, GALLONS),
-				//TelemetryData(Date("08_02_2023 03:32:2"), 3, POUNDS),
-				//TelemetryData(Date("11_15_2024 06:11:2"), 4, GALLONS),
-				//TelemetryData(Date("12_12_2023 17:21:2"), 5, POUNDS),
-				//TelemetryData(Date("01_03_2022 20:02:2"), 6, GALLONS),
-				//TelemetryData(Date("04_19_2023 21:34:2"), 7, GALLONS),
-				//TelemetryData(Date("06_20_2021 15:48:2"), 8, GALLONS)
-			//};
-			//std::vector<Packet> Packets;
-			//for (int i = 0; i < Flags.size(); i++) {
-				//Packets.push_back(PacketFactory::create(Flags[i], Ids[i], Data[i]));
-				//Assert::AreSame(PacketFactory::create(Flags[i], Ids[i], Data[i]).getFlag(), Flags[i]);
-				//Assert::AreSame(PacketFactory::create(Flags[i], Ids[i], Data[i]).getId(), Ids[i]);
-				//Assert::AreSame(PacketFactory::create(Flags[i], Ids[i], Data[i]).getTelemetryData(), Data[i]);
-				//Assert::AreEqual(Packets[i].getFlag(), Flags[i]);
-				//Assert::AreEqual(Packets[i].getId(), Ids[i]);
-			//}
-			//for (int i = 0; i < Flags.size(); i++) {
-				//Assert::AreSame(PacketFactory::create(Flags[i], Ids[i], Data[i]).getFlag(), Flags[i]);
-				//Assert::AreSame(PacketFactory::create(Flags[i], Ids[i], Data[i]).getId(), Ids[i]);
-				//Assert::AreSame(PacketFactory::create(Flags[i], Ids[i], Data[i]).getTelemetryData(), Data[i]);
-				//Assert::AreEqual(Packets[i].getFlag(), Flags[i]);
-				//Assert::AreEqual(Packets[i].getId(), Ids[i]);
-			//}
-			Packet pkt = PacketFactory::create(SENDDATA, 10, TelemetryData(Date("03_05_2022 15:24:2"), 1, POUNDS));
-			Assert::AreSame((int)SENDDATA, (int)pkt.getFlag());
-
-
+			std::unique_ptr<Packet> pkt = PacketFactory::create(ProtocolFlag::SENDDATA, 10, TelemetryData(Date("03_05_2022 15:24:2"), 1, POUNDS));
+			Assert::AreEqual((int)ProtocolFlag::SENDDATA, (int)pkt->getFlag());
 		}
 		//TEST_METHOD(CreateVariant2Tests)
 		//{
