@@ -16,11 +16,11 @@ Client::~Client() {
     WSACleanup();
 }
 
-bool Client::Connect() {
+bool Client::Connect(const char* serverIp) {
     sockaddr_in serverAddr = {};
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(SERVER_PORT);
-    InetPtonA(AF_INET, SERVER_IP, &serverAddr.sin_addr); 
+    InetPtonA(AF_INET, serverIp, &serverAddr.sin_addr);
 
     if (connect(this->clientSocket, (sockaddr*)&serverAddr, sizeof(serverAddr)) != 0)
         return false;
@@ -55,8 +55,8 @@ Packet Client::ReceivePacket() {
     return receivedPacket;
 }
 
-void Client::Run() {
-    if (!Connect()) {
+void Client::Run(const char* serverIp) {
+    if (!Connect(serverIp)) {
         std::cerr << "Failed to connect to server." << std::endl;
         return;
     }
