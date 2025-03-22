@@ -1,5 +1,5 @@
 #include "Client.h"
-int main() {
+int main(int argc, char* argv[]) {
     try {
         Client client;
         client.Run();
