@@ -75,11 +75,9 @@ void Client::Run(const char* serverIp) {
 
     // reads through file if lines are left
     while (fileOpened && plane.GetNextFuelData()) {
-        TelemetryData telemetry(plane.GetDate(), plane.GetFuelQuantity(), plane.GetFuelType());
-
         Packet dataPacket;
         try {
-            dataPacket = PacketFactory::create(ProtocolFlag::SENDDATA, uniqueId, telemetry);
+            dataPacket = PacketFactory::create(ProtocolFlag::SENDDATA, uniqueId, plane.GetTelemetry());
         }
         catch (const std::exception& e) {
             std::cerr << "Failure while deserializing the recievedPacket";

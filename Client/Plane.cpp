@@ -41,7 +41,7 @@ bool Plane::GetNextFuelData() {
         if (std::getline(ss, dateString, ',') && std::getline(ss, fuelString, ',')) {
             try {
                 // store date and fuel quantity
-                this->telemetry = TelemetryData(dateString.c_str(), stoi(fuelString), this->fuelType);
+                this->telemetry = TelemetryData(dateString.c_str(), stof(fuelString), this->fuelType);
                 return true;
             }
             catch (std::exception e) {
@@ -58,14 +58,9 @@ void Plane::CloseFuelDataFile() {
     telemetryFile.is_open() ? telemetryFile.close() : void();
 }
 
-Date Plane::GetDate()
+TelemetryData Plane::GetTelemetry()
 {
-    return this->date;
-}
-
-float Plane::GetFuelQuantity()
-{
-    return this->fuelQuantity;
+    return this->telemetry;
 }
 
 FuelType Plane::GetFuelType()

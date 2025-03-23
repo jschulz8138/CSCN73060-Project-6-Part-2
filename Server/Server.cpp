@@ -53,7 +53,7 @@ void Server::MainThread()
 	//Create my workers
 	//-1 because the main thread is processing the entire time.
 	std::vector<std::thread> workerThreads;
-	for (int i = 0; i < std::thread::hardware_concurrency() - 1; ++i) {
+	for (unsigned int i = 0; i < std::thread::hardware_concurrency() - 1; ++i) {
 		workerThreads.push_back(std::thread(&Server::WorkerThread, this));
 	}
 

@@ -19,8 +19,7 @@ public:
 	// DO NOT FORGET!!!!
 	void CloseFuelDataFile();
 
-	Date GetDate();
-	float GetFuelQuantity();
+	TelemetryData GetTelemetry();
 	FuelType GetFuelType();
 
 private:
