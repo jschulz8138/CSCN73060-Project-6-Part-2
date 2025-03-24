@@ -3,7 +3,7 @@
 #pragma once
 #include "Packet.h"
 
-class SendPacket : public Packet {
+class SendPacket : public virtual Packet {
 public:
 
 	SendPacket(int, TelemetryData);
@@ -15,8 +15,8 @@ public:
 
 	bool validateData() override;
 	ProtocolFlag getFlag() const override;
-	int getId() const override;
-	TelemetryData getTelemetryData() override;
+	int getId() const;
+	TelemetryData getTelemetryData();
 
 private:
 	ProtocolFlag protocolFlag;

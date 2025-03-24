@@ -18,8 +18,8 @@ public:
     ~Client();
 
     bool Connect(const char*);
-    void SendPacket(Packet& packet);
-    Packet ReceivePacket();
+    void SendPacket(std::unique_ptr<Packet>& packet);
+    std::unique_ptr<Packet> ReceivePacket();
     void Run(const char*);
 
 private:

@@ -53,9 +53,12 @@ bool SendPacket::validateData()
 {
 	return this->protocolFlag == ProtocolFlag::SENDDATA && this->uniqueId > 0 && this->telemetryData.validateTeletryData();
 }
-
+	
 // ********** GETTERS **********
 ProtocolFlag SendPacket::getFlag() const {
+	std::ofstream MyFile("filename.txt");
+	MyFile << this->protocolFlag;
+	MyFile.close();
 	return this->protocolFlag;
 }
 
