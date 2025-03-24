@@ -1,4 +1,5 @@
 #include "Client.h"
+#include "Plane.h"
 
 Client::Client() {
     WSAData wsaData;
@@ -15,11 +16,11 @@ Client::~Client() {
     WSACleanup();
 }
 
-bool Client::Connect() {
+bool Client::Connect(const char* serverIp) {
     sockaddr_in serverAddr = {};
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(SERVER_PORT);
-    InetPtonA(AF_INET, SERVER_IP, &serverAddr.sin_addr); 
+    InetPtonA(AF_INET, serverIp, &serverAddr.sin_addr);
 
     if (connect(this->clientSocket, (sockaddr*)&serverAddr, sizeof(serverAddr)) != 0)
         return false;
@@ -54,8 +55,8 @@ std::unique_ptr<Packet> Client::ReceivePacket() {
     return receivedPacket;
 }
 
-void Client::Run() {
-    if (!Connect()) {
+void Client::Run(const char* serverIp) {
+    if (!Connect(serverIp)) {
         std::cerr << "Failed to connect to server." << std::endl;
         return;
     }
@@ -65,18 +66,24 @@ void Client::Run() {
     int uniqueId = idPacket->getId();
     std::cout << "Received Unique ID: " << uniqueId << std::endl;
 
-    // Send multiple data packets
-    for (int i = 0; i < 5; i++) {
-        TelemetryData telemetry(Date("3_4_2025"), i * 10.0f, FuelType::GALLONS);  // Example data
+    // set up telemetry reading class
+    Plane plane;
+    bool fileOpened = true;
 
+
+    // tries to open files, doesn't read if unsuccessful
+    fileOpened = plane.OpenFuelDataFile("Packet dataPacket;") ? true : false;
+
+    // reads through file if lines are left
+    while (fileOpened && plane.GetNextFuelData()) {
         std::unique_ptr<Packet> dataPacket;
         try {
-            dataPacket = PacketFactory::create(ProtocolFlag::SENDDATA, uniqueId, telemetry);
+            dataPacket = PacketFactory::create(ProtocolFlag::SENDDATA, uniqueId, plane.GetTelemetry());
         }
         catch (const std::exception& e) {
             std::cerr << "Failure while deserializing the recievedPacket";
         }
-    
+      
         SendPacket(dataPacket);
 
         // Wait for acknowledgment

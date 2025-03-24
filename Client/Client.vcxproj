@@ -31,6 +31,7 @@
     <ClInclude Include="..\Shared\ProtocolFlag.h" />
     <ClInclude Include="..\Shared\TelemetryData.h" />
     <ClInclude Include="Client.h" />
+    <ClInclude Include="Plane.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Shared\AckPacket.cpp" />
@@ -42,6 +43,7 @@
     <ClCompile Include="..\Shared\TelemetryData.cpp" />
     <ClCompile Include="Client.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Plane.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
