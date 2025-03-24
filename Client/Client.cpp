@@ -28,22 +28,22 @@ bool Client::Connect() {
     return true;
 }
 
-void Client::SendPacket(Packet& packet) {
-    std::vector<char> serializedData = packet.SerializeData();
+void Client::SendPacket(std::unique_ptr<Packet>& packet) {
+    std::vector<char> serializedData = packet->SerializeData();
     int bytesSent = send(this->clientSocket, serializedData.data(), serializedData.size(), 0);
 
     if (bytesSent == SOCKET_ERROR)
         throw std::runtime_error("Failed to send packet.");
 }
 
-Packet Client::ReceivePacket() {
+std::unique_ptr<Packet> Client::ReceivePacket() {
     char buffer[BUFFER_SIZE];
     int bytesReceived = recv(this->clientSocket, buffer, BUFFER_SIZE, 0);
 
     if (bytesReceived <= 0)
         throw std::runtime_error("Failed to receive packet.");
 
-    Packet receivedPacket;
+    std::unique_ptr<Packet> receivedPacket;
     try {
         receivedPacket = PacketFactory::create(std::vector<char>(buffer, buffer + bytesReceived));
     }
@@ -61,32 +61,32 @@ void Client::Run() {
     }
 
     // Receive Unique ID from Server
-    Packet idPacket = ReceivePacket();
-    int uniqueId = idPacket.getId();
+    std::unique_ptr<Packet> idPacket = ReceivePacket();
+    int uniqueId = idPacket->getId();
     std::cout << "Received Unique ID: " << uniqueId << std::endl;
 
     // Send multiple data packets
     for (int i = 0; i < 5; i++) {
         TelemetryData telemetry(Date("3_4_2025"), i * 10.0f, FuelType::GALLONS);  // Example data
 
-        Packet dataPacket;
+        std::unique_ptr<Packet> dataPacket;
         try {
             dataPacket = PacketFactory::create(ProtocolFlag::SENDDATA, uniqueId, telemetry);
         }
         catch (const std::exception& e) {
             std::cerr << "Failure while deserializing the recievedPacket";
         }
- 
+    
         SendPacket(dataPacket);
 
         // Wait for acknowledgment
-        Packet ackPacket = ReceivePacket();
-        if (ackPacket.getFlag() == ProtocolFlag::ACK)
+        std::unique_ptr<Packet> ackPacket = ReceivePacket();
+        if (ackPacket->getFlag() == ProtocolFlag::ACK)
             std::cout << "Received ACK for packet " << i + 1 << std::endl;
     }
 
     // End communication
-    Packet endPacket;
+    std::unique_ptr<Packet> endPacket;
     try {
         endPacket = PacketFactory::create(ProtocolFlag::ENDCOMMUNICATION, uniqueId);  // Example data
     }
