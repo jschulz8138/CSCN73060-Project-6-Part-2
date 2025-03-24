@@ -1,30 +1,31 @@
 // Implementation of PacketFactory Class
 
 #include "PacketFactory.h"
+#include <iostream>
 
 // Factory methods to create packets
-Packet PacketFactory::create(ProtocolFlag flag, int id, TelemetryData Data) {
+std::unique_ptr<Packet> PacketFactory::create(ProtocolFlag flag, int id, TelemetryData Data) {
     
     // check the flag and create the according packet
     switch (flag) {
     case ProtocolFlag::GENERATEID: {
-        GeneratePacket packet(id);
-        return packet.validateData() ? packet : throw std::invalid_argument("Packet could not validateData()");
+        std::unique_ptr<GeneratePacket> packet = std::make_unique< GeneratePacket>(id);
+        return packet->validateData() ? std::move(packet) : throw std::invalid_argument("Packet could not validateData()");
     }
 
     case ProtocolFlag::SENDDATA: {
-        SendPacket packet(id, Data);
-        return packet.validateData() ? packet : throw std::invalid_argument("Packet could not validateData()");
+        std::unique_ptr<SendPacket> packet = std::make_unique<SendPacket>(id, Data);
+        return packet->validateData() ? std::move(packet) : throw std::invalid_argument("Packet could not validateData()");
     }
 
     case ProtocolFlag::ENDCOMMUNICATION: {
-        EndPacket packet(id);
-        return packet.validateData() ? packet : throw std::invalid_argument("Packet could not validateData()");
+        std::unique_ptr<EndPacket> packet = std::make_unique<EndPacket>(id);
+        return packet->validateData() ? std::move(packet) : throw std::invalid_argument("Packet could not validateData()");
     }
 
     case ProtocolFlag::ACK: {
-        AckPacket packet;
-        return packet.validateData() ? packet : throw std::invalid_argument("Packet could not validateData()");
+        std::unique_ptr<AckPacket> packet = std::make_unique<AckPacket>();
+        return packet->validateData() ? std::move(packet) : throw std::invalid_argument("Packet could not validateData()");
     }
 
     default: {//Default will just throw an error.
@@ -33,7 +34,7 @@ Packet PacketFactory::create(ProtocolFlag flag, int id, TelemetryData Data) {
     }
 }
 
-Packet PacketFactory::create(std::vector<char> RxBuffer) { // deserializing constructor function
+std::unique_ptr<Packet> PacketFactory::create(std::vector<char> RxBuffer) { // deserializing constructor function
 
     // initialize a flag variable to put the deserialized falg into
     ProtocolFlag flag;
@@ -45,23 +46,23 @@ Packet PacketFactory::create(std::vector<char> RxBuffer) { // deserializing cons
     // check the flag and create the according packet (using the deserializing constructor)
     switch (flag) {
     case ProtocolFlag::GENERATEID: {
-        GeneratePacket packet(RxBuffer);
-        return packet.validateData() ? packet : throw std::invalid_argument("Packet could not validateData()");
+        std::unique_ptr<GeneratePacket> packet = std::make_unique<GeneratePacket>(RxBuffer);
+        return packet->validateData() ? std::move(packet) : throw std::invalid_argument("Packet could not validateData()");
     }
 
     case ProtocolFlag::SENDDATA: {
-        SendPacket packet(RxBuffer);
-        return packet.validateData() ? packet : throw std::invalid_argument("Packet could not validateData()");
+        std::unique_ptr<SendPacket> packet = std::make_unique<SendPacket>(RxBuffer);
+        return packet->validateData() ? std::move(packet) : throw std::invalid_argument("Packet could not validateData()");
     }
 
     case ProtocolFlag::ENDCOMMUNICATION: {
-        EndPacket packet(RxBuffer);
-        return packet.validateData() ? packet : throw std::invalid_argument("Packet could not validateData()");
+        std::unique_ptr<EndPacket> packet = std::make_unique<EndPacket>(RxBuffer);
+        return packet->validateData() ? std::move(packet) : throw std::invalid_argument("Packet could not validateData()");
     }
 
     case ProtocolFlag::ACK: {
-        AckPacket packet(RxBuffer);
-        return packet.validateData() ? packet : throw std::invalid_argument("Packet could not validateData()");
+        std::unique_ptr<AckPacket> packet = std::make_unique<AckPacket>(RxBuffer);
+        return packet->validateData() ? std::move(packet) : throw std::invalid_argument("Packet could not validateData()");
     }
 
     default: {//Default will just throw an error.

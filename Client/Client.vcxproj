@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\Server\Logger.h" />
     <ClInclude Include="..\Shared\AckPacket.h" />
     <ClInclude Include="..\Shared\Date.h" />
     <ClInclude Include="..\Shared\EndPacket.h" />

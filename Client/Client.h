@@ -19,8 +19,8 @@ public:
     ~Client();
 
     bool Connect();
-    void SendPacket(Packet& packet);
-    Packet ReceivePacket();
+    void SendPacket(std::unique_ptr<Packet>& packet);
+    std::unique_ptr<Packet> ReceivePacket();
     void Run();
 
 private:

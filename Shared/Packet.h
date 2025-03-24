@@ -6,6 +6,9 @@
 #include "ProtocolFlag.h"
 #include <string>
 
+#include <iostream>
+#include <fstream>
+
 // ABSTRACT PACKET CLASS
 class Packet
 {
@@ -19,8 +22,8 @@ public:
 
 	virtual bool validateData() { return false; };
 
-	virtual ProtocolFlag getFlag() const { return ProtocolFlag::ACK; };
-	virtual int getId() const { return 0; };
+	virtual ProtocolFlag getFlag() const { return ProtocolFlag::ERR; };
+	virtual int getId() const { return -1; };
 	virtual TelemetryData getTelemetryData() { return TelemetryData(); };
 
 };
