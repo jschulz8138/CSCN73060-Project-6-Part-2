@@ -70,6 +70,9 @@ void Client::Run(const char* serverIp) {
     Plane plane;
     bool fileOpened = true;
 
+    //----------------------------------------------------//
+    // TO-DO: Add a way to choose telemetry file randomly //
+    //----------------------------------------------------//
 
     // tries to open files, doesn't read if unsuccessful
     fileOpened = plane.OpenFuelDataFile("Packet dataPacket;") ? true : false;
@@ -89,7 +92,7 @@ void Client::Run(const char* serverIp) {
         // Wait for acknowledgment
         std::unique_ptr<Packet> ackPacket = ReceivePacket();
         if (ackPacket->getFlag() == ProtocolFlag::ACK)
-            std::cout << "Received ACK for packet " << i + 1 << std::endl;
+            std::cout << "Received ACK for packet" << std::endl;
     }
 
     // End communication
