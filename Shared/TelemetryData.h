@@ -1,4 +1,5 @@
 #pragma once
+#include <vector>
 #include "Date.h"
 #include "FuelType.h"
 
