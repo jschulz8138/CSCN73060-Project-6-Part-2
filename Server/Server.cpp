@@ -8,6 +8,7 @@
 Server::Server(const std::string& dbConnString, int port)
 {
 	this->port = port;
+	this->dbConnectionString = dbConnString;
 
 	if (WSAStartup(MAKEWORD(2, 2), &this->wsaData) != 0)
 		throw std::runtime_error("Failed to start up WSA.");
@@ -16,15 +17,19 @@ Server::Server(const std::string& dbConnString, int port)
 	if (this->serverSocket == INVALID_SOCKET)
 		throw std::runtime_error("Failed to create socket.");
 
+	std::cout << "Connecting to: " << this->dbConnectionString << std::endl;
+
+
 	for (int i = 0; i < std::thread::hardware_concurrency(); ++i) {
 		try {
-			auto conn = std::make_unique<pqxx::connection>(this->dbConnectionString);
+			auto conn = std::make_unique<pqxx::connection>(dbConnectionString);
 			if (!conn->is_open()) {
 				throw std::runtime_error("Failed to open PostgreSQL connection.");
 			}
 			this->dbConnections.push_back(std::move(conn));
 		}
 		catch (const std::exception& ex) {
+			std::cerr << "Database connection error: " << ex.what() << std::endl;
 			throw std::runtime_error("Database connection error: " + std::string(ex.what()));
 		}
 	}
@@ -75,8 +80,11 @@ void Server::MainThread()
 	sockaddr_in clientAddr;
 	int clientAddrSize = sizeof(clientAddr);
 
+	std::cout << "Server is up and ready..." << std::endl;
+
 	while (true) {
 		//Make a new friend
+		std::cout << "Waiting for client..." << std::endl;
 		SOCKET clientSocket = accept(this->serverSocket, (sockaddr*)&clientAddr, &clientAddrSize);
 		if (clientSocket == INVALID_SOCKET) {
 			this->logger.logMessage("Failed to setup client socket.");
@@ -122,7 +130,8 @@ void Server::MainThread()
 		//Remember, WSARecv is non blocking and it only collect the current cient
 		DWORD flags = 0;
 		if (WSARecv(clientSocket, &clientContext->wsaBuf, 1, nullptr, &flags, &clientContext->overlapped, nullptr) == SOCKET_ERROR) {
-			this->logger.logMessage("WSARecv failed on first read. Closing connection.");
+			int errorCode = WSAGetLastError();
+			this->logger.logMessage("WSARecv failed on first read. Closing connection. Code:" + std::to_string(errorCode));
 			closesocket(clientSocket);
 			delete clientContext;
 			continue;
@@ -192,17 +201,17 @@ void Server::WorkerThread(int threadIndex)
 		case ProtocolFlag::SENDDATA:
 			//If this is the first communciation, initialize the prevTimeStamp and prevTelemetryData
 			if (!clientContext->isPrevTelemetryDataInitialized) {
-				clientContext->prevTelemetryData = receivedPacket.getTelemetryData();
+				clientContext->prevTelemetryData = receivedPacket->getTelemetryData();
 				clientContext->isPrevTelemetryDataInitialized = true;
 			}
 			else {
-				this->pds.storeFuelConsumption(conn, receivedPacket.getId(), receivedPacket.getTelemetryData().getFuel() - clientContext->prevTelemetryData.getFuel(), clientContext->prevTelemetryData.getFuelType());
-				clientContext->prevTelemetryData = receivedPacket.getTelemetryData();
+				this->pds.storeFuelConsumption(conn, receivedPacket->getId(), receivedPacket->getTelemetryData().getFuel() - clientContext->prevTelemetryData.getFuel(), clientContext->prevTelemetryData.getFuelType());
+				clientContext->prevTelemetryData = receivedPacket->getTelemetryData();
 			}
 
 			break;
 		case ProtocolFlag::ENDCOMMUNICATION:
-			this->pds.storeAverageFuelConsumption(conn, receivedPacket.getId());
+			this->pds.storeAverageFuelConsumption(conn, receivedPacket->getId());
 			closesocket(clientContext->clientSocket);
 			delete clientContext;
 			continue;
@@ -228,5 +237,5 @@ void Server::WorkerThread(int threadIndex)
 
 float Server::calculateFuelConsumption(TelemetryData previousTelemetryData, TelemetryData newTelemetryData)
 {
-	return previousTelemetryData.getFuel() - newTelemetryData.getFuel();;
+	return previousTelemetryData.getFuel() - newTelemetryData.getFuel();
 }
