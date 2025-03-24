@@ -27,6 +27,7 @@ if not exist "vcpkg" (
 
 :: Bootstrap vcpkg
 echo === Bootstrapping vcpkg ===
+echo === Julian is a poopy pants ===
 cd vcpkg
 if not exist "vcpkg.exe" (
     echo Running bootstrap-vcpkg...
