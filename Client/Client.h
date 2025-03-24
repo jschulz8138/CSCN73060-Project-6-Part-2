@@ -9,7 +9,6 @@
 #include "../Shared/AckPacket.h"
 #include "../Shared/PacketFactory.h"
 
-#define SERVER_IP "127.0.0.1"
 #define SERVER_PORT 8080
 #define BUFFER_SIZE 512
 
@@ -18,10 +17,10 @@ public:
     Client();
     ~Client();
 
-    bool Connect();
+    bool Connect(const char*);
     void SendPacket(std::unique_ptr<Packet>& packet);
     std::unique_ptr<Packet> ReceivePacket();
-    void Run();
+    void Run(const char*);
 
 private:
     SOCKET clientSocket;
