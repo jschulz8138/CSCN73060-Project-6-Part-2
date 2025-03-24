@@ -5,7 +5,7 @@
 #include "../Shared/AckPacket.h"
 #include "../Shared/PacketFactory.h"
 
-Server::Server(int port)
+Server::Server(const std::string& dbConnString, int port)
 {
 	this->port = port;
 
@@ -15,6 +15,20 @@ Server::Server(int port)
 	this->serverSocket = socket(AF_INET, SOCK_STREAM, 0);
 	if (this->serverSocket == INVALID_SOCKET)
 		throw std::runtime_error("Failed to create socket.");
+
+	for (int i = 0; i < std::thread::hardware_concurrency(); ++i) {
+		try {
+			auto conn = std::make_unique<pqxx::connection>(this->dbConnectionString);
+			if (!conn->is_open()) {
+				throw std::runtime_error("Failed to open PostgreSQL connection.");
+			}
+			this->dbConnections.push_back(std::move(conn));
+		}
+		catch (const std::exception& ex) {
+			throw std::runtime_error("Database connection error: " + std::string(ex.what()));
+		}
+	}
+
 
 	sockaddr_in serverAddr = {};
 	serverAddr.sin_family = AF_INET;
@@ -55,7 +69,7 @@ void Server::MainThread()
 	//-1 because the main thread is processing the entire time.
 	std::vector<std::thread> workerThreads;
 	for (int i = 0; i < std::thread::hardware_concurrency() - 1; ++i) {
-		workerThreads.push_back(std::thread(&Server::WorkerThread, this));
+		workerThreads.push_back(std::thread(&Server::WorkerThread, this, i));
 	}
 
 	sockaddr_in clientAddr;
@@ -126,8 +140,10 @@ void Server::MainThread()
 //Proletariat
 //Takes the packets and deals with them
 //One packet at a time, not one client at a time.
-void Server::WorkerThread()
+void Server::WorkerThread(int threadIndex)
 {
+	auto& conn = *dbConnections[threadIndex];
+
 	DWORD bytesTranferred;
 	ClientContext* clientContext;
 	OVERLAPPED* overlapped;
@@ -175,18 +191,18 @@ void Server::WorkerThread()
 		switch (receivedPacket.getFlag()) {
 		case ProtocolFlag::SENDDATA:
 			//If this is the first communciation, initialize the prevTimeStamp and prevTelemetryData
-			if (clientContext->isPrevTelemetryDataInitialized) {
+			if (!clientContext->isPrevTelemetryDataInitialized) {
 				clientContext->prevTelemetryData = receivedPacket.getTelemetryData();
 				clientContext->isPrevTelemetryDataInitialized = true;
 			}
 			else {
-				this->pds.storeFuelConsumption();
+				this->pds.storeFuelConsumption(conn, receivedPacket.getId(), receivedPacket.getTelemetryData().getFuel() - clientContext->prevTelemetryData.getFuel(), clientContext->prevTelemetryData.getFuelType());
 				clientContext->prevTelemetryData = receivedPacket.getTelemetryData();
 			}
 
 			break;
 		case ProtocolFlag::ENDCOMMUNICATION:
-			this->pds.storeAverageFuelConsumption(receivedPacket.getId());
+			this->pds.storeAverageFuelConsumption(conn, receivedPacket.getId());
 			closesocket(clientContext->clientSocket);
 			delete clientContext;
 			continue;
