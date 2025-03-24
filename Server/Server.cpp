@@ -101,7 +101,7 @@ void Server::MainThread()
 
 		//We can use trash Telemetry Data here
 		//FIX TELEMETRY DATA HERE
-		Packet idPacket;
+		std::unique_ptr<Packet> idPacket;
 		try {
 			idPacket = PacketFactory::create(ProtocolFlag::GENERATEID, clientId);
 		}
@@ -109,7 +109,7 @@ void Server::MainThread()
 			this->logger.logMessage("Failure whiile using the packet factory for an ACK Packet.");
 		}
 		
-		std::vector<char> serializedPacket = idPacket.SerializeData();
+		std::vector<char> serializedPacket = idPacket->SerializeData();
 
 		if (send(clientSocket, serializedPacket.data(), serializedPacket.size(), 0) == SOCKET_ERROR) {
 			this->logger.logMessage("Failed to send GENERATEID packet.");
@@ -148,14 +148,14 @@ void Server::WorkerThread(int threadIndex)
 	ClientContext* clientContext;
 	OVERLAPPED* overlapped;
 
-	Packet ackPacket;
+	std::unique_ptr<Packet> ackPacket;
 	try {
 		ackPacket = PacketFactory::create(ProtocolFlag::ACK);
 	}
 	catch (const std::exception& e) {
-		this->logger.logMessage("Failure whiile using the packet factory for an ACK Packet.");
+		this->logger.logMessage("Failure while using the packet factory for an ACK Packet.");
 	}
-	std::vector<char> serializedAck = ackPacket.SerializeData();
+	std::vector<char> serializedAck = ackPacket->SerializeData();
 
 	while (true){
 		if (!GetQueuedCompletionStatus(this->hIOCP, &bytesTranferred, (PULONG_PTR)&clientContext, &overlapped, INFINITE)) {
@@ -173,7 +173,7 @@ void Server::WorkerThread(int threadIndex)
 		}
 
 		//Process the packet
-		Packet receivedPacket;
+		std::unique_ptr<Packet> receivedPacket;
 		try {
 			receivedPacket = PacketFactory::create(clientContext->buffer);
 		}
@@ -181,14 +181,14 @@ void Server::WorkerThread(int threadIndex)
 			this->logger.logMessage("Failure while deserializing the recievedPacket");
 		}
 
-		if (!receivedPacket.validateData()) {
-			this->logger.logMessage("Received packet has not been deserialized properly");
-			closesocket(clientContext->clientSocket);
-			delete clientContext;
-			continue;
-		}
+		//if (!receivedPacket->validateData()) {
+		//	this->logger.logMessage("Received packet has not been deserialized properly");
+		//	closesocket(clientContext->clientSocket);
+		//	delete clientContext;
+		//	continue;
+		//}
 
-		switch (receivedPacket.getFlag()) {
+		switch (receivedPacket->getFlag()) {
 		case ProtocolFlag::SENDDATA:
 			//If this is the first communciation, initialize the prevTimeStamp and prevTelemetryData
 			if (!clientContext->isPrevTelemetryDataInitialized) {
