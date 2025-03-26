@@ -77,17 +77,18 @@ void Server::MainThread()
 		workerThreads.push_back(std::thread(&Server::WorkerThread, this, i));
 	}
 
-	sockaddr_in clientAddr;
-	int clientAddrSize = sizeof(clientAddr);
 
 	std::cout << "Server is up and ready..." << std::endl;
 
 	while (true) {
 		//Make a new friend
+		sockaddr_in clientAddr;
+		int clientAddrSize = sizeof(clientAddr);
+
 		std::cout << "Waiting for client..." << std::endl;
 		SOCKET clientSocket = accept(this->serverSocket, (sockaddr*)&clientAddr, &clientAddrSize);
 		if (clientSocket == INVALID_SOCKET) {
-			this->logger.logMessage("Failed to setup client socket.");
+			this->logger.logMessage("Failed to setup client socket. " + std::to_string(WSAGetLastError()));
 			continue;
 		}
 

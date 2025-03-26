@@ -6,7 +6,7 @@ Client::Client() {
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
         throw std::runtime_error("Failed to start WSA.");
 
-    this->clientSocket = socket(AF_INET, SOCK_STREAM, 0);
+    this->clientSocket = WSASocket(AF_INET, SOCK_STREAM, 0, nullptr, 0, WSA_FLAG_OVERLAPPED);
     if (this->clientSocket == INVALID_SOCKET)
         throw std::runtime_error("Failed to create socket.");
 }
@@ -31,11 +31,45 @@ bool Client::Connect(const char* serverIp) {
 
 void Client::SendPacket(std::unique_ptr<Packet>& packet) {
     std::vector<char> serializedData = packet->SerializeData();
-    int bytesSent = send(this->clientSocket, serializedData.data(), serializedData.size(), 0);
 
-    if (bytesSent == SOCKET_ERROR)
-        throw std::runtime_error("Failed to send packet.");
+    WSABUF wsaBuf;
+    wsaBuf.buf = serializedData.data();
+    wsaBuf.len = static_cast<ULONG>(serializedData.size());
+
+    OVERLAPPED overlapped = {};
+    HANDLE hEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
+    if (!hEvent)
+        throw std::runtime_error("Failed to create event for WSASend.");
+
+    overlapped.hEvent = hEvent;
+
+    DWORD bytesSent = 0;
+    int result = WSASend(this->clientSocket, &wsaBuf, 1, &bytesSent, 0, &overlapped, nullptr);
+
+    if (result == SOCKET_ERROR) {
+        int err = WSAGetLastError();
+        if (err != WSA_IO_PENDING) {
+            CloseHandle(hEvent);
+            throw std::runtime_error("WSASend failed immediately." + std::to_string(err));
+        }
+
+        // Wait for the async operation to complete
+        DWORD waitResult = WaitForSingleObject(hEvent, INFINITE);
+        if (waitResult != WAIT_OBJECT_0) {
+            CloseHandle(hEvent);
+            throw std::runtime_error("WSASend wait failed.");
+        }
+
+        // Get the number of bytes actually sent
+        if (!WSAGetOverlappedResult(this->clientSocket, &overlapped, &bytesSent, FALSE, nullptr)) {
+            CloseHandle(hEvent);
+            throw std::runtime_error("WSASend completion failed.");
+        }
+    }
+
+    CloseHandle(hEvent);
 }
+
 
 std::unique_ptr<Packet> Client::ReceivePacket() {
     char buffer[BUFFER_SIZE];
@@ -73,7 +107,7 @@ void Client::Run(const char* serverIp) {
 
 
     // tries to open files, doesn't read if unsuccessful
-    fileOpened = plane.OpenFuelDataFile("Packet dataPacket;") ? true : false;
+    fileOpened = plane.OpenFuelDataFile("Telem_czba-cykf-pa28-w2_2023_3_1 12_31_27.txt") ? true : false;
 
     // reads through file if lines are left
     while (fileOpened && plane.GetNextFuelData()) {
