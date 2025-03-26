@@ -56,6 +56,7 @@ Server::Server(const std::string& dbConnString, int port)
 
 Server::~Server()
 {
+	shutdown(serverSocket, SD_SEND);
 	if (closesocket(this->serverSocket) != 0)
 		throw std::runtime_error("Failed to close socket.");
 
@@ -103,6 +104,7 @@ void Server::MainThread()
 
 		if (CreateIoCompletionPort((HANDLE)clientSocket, this->hIOCP, (ULONG_PTR)clientContext, 0) == NULL) {
 			this->logger.logMessage("Failed to associate client socket with IOCP.");
+			shutdown(clientSocket, SD_SEND);
 			closesocket(clientSocket);
 			delete clientContext;
 			continue;
@@ -122,6 +124,7 @@ void Server::MainThread()
 
 		if (send(clientSocket, serializedPacket.data(), serializedPacket.size(), 0) == SOCKET_ERROR) {
 			this->logger.logMessage("Failed to send GENERATEID packet.");
+			shutdown(clientSocket, SD_SEND);
 			closesocket(clientSocket);
 			delete clientContext;
 			continue;
@@ -132,10 +135,13 @@ void Server::MainThread()
 		DWORD flags = 0;
 		if (WSARecv(clientSocket, &clientContext->wsaBuf, 1, nullptr, &flags, &clientContext->overlapped, nullptr) == SOCKET_ERROR) {
 			int errorCode = WSAGetLastError();
-			this->logger.logMessage("WSARecv failed on first read. Closing connection. Code:" + std::to_string(errorCode));
-			closesocket(clientSocket);
-			delete clientContext;
-			continue;
+			if (errorCode != WSA_IO_PENDING) {
+				this->logger.logMessage("WSARecv failed on first read. Closing connection. Code:" + std::to_string(errorCode));
+				shutdown(clientSocket, SD_SEND);
+				closesocket(clientSocket);
+				delete clientContext;
+				continue;
+			}
 		}
 	}
 
@@ -170,6 +176,7 @@ void Server::WorkerThread(int threadIndex)
 	while (true){
 		if (!GetQueuedCompletionStatus(this->hIOCP, &bytesTranferred, (PULONG_PTR)&clientContext, &overlapped, INFINITE)) {
 			this->logger.logMessage("Failure while dequeuing IOCP. Cleaning up the client connection.");
+			shutdown(clientContext->clientSocket, SD_SEND);
 			closesocket(clientContext->clientSocket);
 			delete clientContext;
 			continue;
@@ -177,6 +184,7 @@ void Server::WorkerThread(int threadIndex)
 
 		if(bytesTranferred == 0){
 			this->logger.logMessage("Client has disconnected. Cleaning up the client connection.");
+			shutdown(clientContext->clientSocket, SD_SEND);
 			closesocket(clientContext->clientSocket);
 			delete clientContext;
 			continue;
@@ -193,6 +201,7 @@ void Server::WorkerThread(int threadIndex)
 
 		//if (!receivedPacket->validateData()) {
 		//	this->logger.logMessage("Received packet has not been deserialized properly");
+		//  shutdown(clientContext->clientSocket, SD_SEND);
 		//	closesocket(clientContext->clientSocket);
 		//	delete clientContext;
 		//	continue;
@@ -213,11 +222,13 @@ void Server::WorkerThread(int threadIndex)
 			break;
 		case ProtocolFlag::ENDCOMMUNICATION:
 			this->pds.storeAverageFuelConsumption(conn, receivedPacket->getId());
+			shutdown(clientContext->clientSocket, SD_SEND);
 			closesocket(clientContext->clientSocket);
 			delete clientContext;
 			continue;
 		default:
 			this->logger.logMessage("Received packet with an unknown flag.");
+			shutdown(clientContext->clientSocket, SD_SEND);
 			closesocket(clientContext->clientSocket);
 			delete clientContext;
 			continue;
@@ -228,10 +239,14 @@ void Server::WorkerThread(int threadIndex)
 		ZeroMemory(&clientContext->overlapped, sizeof(OVERLAPPED));
 		DWORD flags = 0;
 		if (WSARecv(clientContext->clientSocket, &clientContext->wsaBuf, 1, nullptr, &flags, &clientContext->overlapped, nullptr) == SOCKET_ERROR) {
-			this->logger.logMessage("WSARecv failed. Closing connection.");
-			closesocket(clientContext->clientSocket);
-			delete clientContext;
-			continue;
+			int errorCode = WSAGetLastError();
+			if (errorCode != WSA_IO_PENDING) {
+				this->logger.logMessage("WSARecv failed. Closing connection.");
+				shutdown(clientContext->clientSocket, SD_SEND);
+				closesocket(clientContext->clientSocket);
+				delete clientContext;
+				continue;
+			}
 		}
 	}
 }
