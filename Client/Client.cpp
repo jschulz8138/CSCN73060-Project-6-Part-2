@@ -70,9 +70,8 @@ void Client::Run(const char* serverIp) {
     Plane plane;
     bool fileOpened = true;
 
-
     // tries to open files, doesn't read if unsuccessful
-    fileOpened = plane.OpenFuelDataFile("Packet dataPacket;") ? true : false;
+    fileOpened = plane.OpenFuelDataFile(plane[uniqueId%4]) ? true : false;
 
     // reads through file if lines are left
     while (fileOpened && plane.GetNextFuelData()) {
@@ -89,7 +88,7 @@ void Client::Run(const char* serverIp) {
         // Wait for acknowledgment
         std::unique_ptr<Packet> ackPacket = ReceivePacket();
         if (ackPacket->getFlag() == ProtocolFlag::ACK)
-            std::cout << "Received ACK for packet " << i + 1 << std::endl;
+            std::cout << "Received ACK for packet" << std::endl;
     }
 
     // End communication

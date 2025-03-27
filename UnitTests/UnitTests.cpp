@@ -6,6 +6,7 @@
 #include "../Shared/Packet.h"
 #include "../Shared/FuelType.h"
 #include "../Shared/ProtocolFlag.h"
+#include "../Client/Plane.h"
 #include <iostream>
 
 
@@ -261,6 +262,19 @@ namespace UnitTests
 			std::vector<const char*> dateString = { "03_03_2023 15:53:2",		"4_15_2023 15:53:2",	   "3_7_2023 15:53:2",    "3_3_2023 12:53:2",    "3_3_2023 8:2:2",		"3_3_2023 15:3:2" };
 			for (int i = 0; i < dateString.size(); i++)
 				Assert::AreEqual(Date(dateString[i]).validateDate(), true);
+		}
+	};
+
+	TEST_CLASS(PlaneUnitTests)
+	{
+	public:
+		TEST_METHOD(CorrectPoundsFile)
+		{
+
+			std::vector<const char*> dateString = { "03_03_2023 15:53:2",		"4_15_2023 15:53:2",	   "3_7_2023 15:53:2",    "3_3_2023 12:53:2",    "3_3_2023 8:2:2",		"3_3_2023 15:3:2" };
+			std::vector<std::string> expectedDateString = { "03_03_2023 15:53:02",	"04_15_2023 15:53:02", "03_07_2023 15:53:02", "03_03_2023 12:53:02", "03_03_2023 08:02:02",	"03_03_2023 15:03:02" };
+			for (int i = 0; i < dateString.size(); i++)
+				Assert::AreEqual(expectedDateString[i], std::string(Date(dateString[i])));
 		}
 	};
 }

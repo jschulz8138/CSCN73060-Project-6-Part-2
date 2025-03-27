@@ -100,7 +100,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <AdditionalLibraryDirectories>$(SolutionDir)Client\x64\Debug;$(SolutionDir)Server\x64\Debug;$(VCInstallDir)UnitTest\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>Date.obj;AckPacket.obj;GeneratePacket.obj;EndPacket.obj;SendPacket.obj;PacketFactory.obj;TelemetryData.obj;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Date.obj;AckPacket.obj;GeneratePacket.obj;EndPacket.obj;SendPacket.obj;PacketFactory.obj;TelemetryData.obj;Plane.obj;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
