@@ -23,7 +23,7 @@ public:
 	FuelType GetFuelType();
 
 private:
-	const std::string dataFilePath = "../Data Files/";
+	const std::string dataFilePath = "Data Files/";
 	TelemetryData telemetry;
 	FuelType fuelType;
 	std::ifstream telemetryFile;
