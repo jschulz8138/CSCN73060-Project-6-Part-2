@@ -70,12 +70,8 @@ void Client::Run(const char* serverIp) {
     Plane plane;
     bool fileOpened = true;
 
-    //----------------------------------------------------//
-    // TO-DO: Add a way to choose telemetry file randomly //
-    //----------------------------------------------------//
-
     // tries to open files, doesn't read if unsuccessful
-    fileOpened = plane.OpenFuelDataFile("Packet dataPacket;") ? true : false;
+    fileOpened = plane.OpenFuelDataFile(plane[uniqueId%4]) ? true : false;
 
     // reads through file if lines are left
     while (fileOpened && plane.GetNextFuelData()) {
