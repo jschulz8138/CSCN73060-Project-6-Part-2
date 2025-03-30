@@ -268,13 +268,145 @@ namespace UnitTests
 	TEST_CLASS(PlaneUnitTests)
 	{
 	public:
-		TEST_METHOD(CorrectPoundsFile)
+		// Verifies if every file opens correctly
+		TEST_METHOD(OpenFuelDataFile_ValidFiles)
 		{
+			// Setup
+			Plane plane;
+			bool result = false;
 
-			std::vector<const char*> dateString = { "03_03_2023 15:53:2",		"4_15_2023 15:53:2",	   "3_7_2023 15:53:2",    "3_3_2023 12:53:2",    "3_3_2023 8:2:2",		"3_3_2023 15:3:2" };
-			std::vector<std::string> expectedDateString = { "03_03_2023 15:53:02",	"04_15_2023 15:53:02", "03_07_2023 15:53:02", "03_03_2023 12:53:02", "03_03_2023 08:02:02",	"03_03_2023 15:03:02" };
-			for (int i = 0; i < dateString.size(); i++)
-				Assert::AreEqual(expectedDateString[i], std::string(Date(dateString[i])));
+			// Run test
+			// test all files that are registered in the Plane header
+			for (int i = 0; i < NUM_OF_PLANE_FILES; i++)
+			{
+				result = plane.OpenFuelDataFile(plane[i]);
+
+				// Verify
+				Assert::IsTrue(result);
+
+				// Clean-up
+				plane.CloseFuelDataFile();
+			}
+		}
+
+		// Verifies that files not listed are not openable
+		TEST_METHOD(OpenFuelDataFile_InvalidFile)
+		{
+			// Setup
+			Plane plane;
+			bool result = true;
+
+			// Run Test
+			result = plane.OpenFuelDataFile("fakeTelemetryFile.txt");
+
+			// Verify
+			Assert::IsFalse(result);
+		}
+
+		// Verifies that a file reading returns valid readings
+		// This does not ensure that it is reading it correctly
+		TEST_METHOD(GetNextFuelData_ValidReading)
+		{
+			// Setup
+			Plane plane;
+			TelemetryData data;
+
+			// Run Test
+			// Iterate through every file to verify
+			for (int i = 0; i < NUM_OF_PLANE_FILES; i++) {
+				plane.OpenFuelDataFile(plane[i]);
+
+				// Ensure Iterate through every line
+				while (plane.GetNextFuelData()) {
+					data = plane.GetTelemetry();
+					// Assert
+					// Ensure telemetry from file is valid
+					Assert::IsTrue(data.validateTeletryData());
+				}
+			}
+		}
+
+		// Verifies that if a file is not opened it cannot be read
+		TEST_METHOD(GetNextFuelData_NotRead)
+		{
+			// Setup
+			Plane plane;
+			bool result = true;
+
+			// Run Test
+			// try to read next line in unopened file
+			result = plane.GetNextFuelData();
+
+			// Assert
+			Assert::IsFalse(result, L"Should fail when file is not open");
+		}
+
+		// Verify that if a file is closed data cannot be retrieved
+		// AKA it's actually really closed
+		TEST_METHOD(CloseFuelDataFile_CorrectClosing)
+		{
+			// Setup
+			Plane plane;
+			bool result;
+
+			// Run test
+			// Open a file then close it
+			plane.OpenFuelDataFile(plane[0]);
+			plane.CloseFuelDataFile();
+
+			// Verify
+			// Try to read file's next line.
+			// It should fail
+			result = plane.GetNextFuelData();
+			Assert::IsFalse(result);
+		}
+
+		// Validates that the first and last telemetry data are parsed correctly
+		TEST_METHOD(FullPlane_ValidateFirstLastAndCount)
+		{
+			// Setup
+			Plane plane;
+			plane.OpenFuelDataFile("katl-kefd-B737-700.txt");
+			int expectedLineCount = 8565;	// expected number of lines for katl-kefd-B737-700.txt
+
+			// First expected telemetry return
+			std::string expectedFirstDate = "03_03_2023 14:53:21";
+			float expectedFirstFuel = 4564.466309f;
+			//TelemetryData expectedFirstTemetry(Date(expectedFirstDate), expectedFirstFuel, FuelType::GALLONS);
+
+			// Last expected telemetry return
+			std::string expectedLastDate = "03_03_2023 17:48:29";
+			float expectedLastFuel = 2672.010254f;
+			//TelemetryData expectedLastTelemetry(Date(expectedLastDate), expectedLastFuel, FuelType::GALLONS);
+
+			// Run Test
+			plane.GetNextFuelData();
+			TelemetryData firstTelemetry = plane.GetTelemetry();
+
+			// Verify first telemetry is correct
+			std::string firstDateString = firstTelemetry.getDate();
+			Assert::AreEqual(expectedFirstDate, firstDateString);
+			Assert::AreEqual(expectedFirstFuel, firstTelemetry.getFuelQuantity());
+
+			// iterate through all lines while counting them
+			int lineCount = 1; //starts at 1 since th first line was already read
+			TelemetryData lastTelemetry;
+			while (plane.GetNextFuelData()) {
+				lastTelemetry = plane.GetTelemetry();
+				lineCount++;
+			}
+
+			// Verify first telemetry is correct
+			std::string lastDateString = lastTelemetry.getDate();
+			Assert::AreEqual(expectedLastDate, lastDateString);
+			Assert::AreEqual(expectedLastFuel, lastTelemetry.getFuelQuantity());
+
+			// Verify the correct amount of lines were read
+			// 8565 is the number of lines
+			Assert::AreEqual(expectedLineCount, lineCount);
+
+			// Clean-up
+			plane.CloseFuelDataFile();
 		}
 	};
 }

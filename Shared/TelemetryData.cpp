@@ -72,3 +72,13 @@ bool TelemetryData::validateTeletryData()
 {
 	return this->date.validateDate() && this->fuel >= 0; //We are going to hope that fueltype always works because cpp is a typed language.
 }
+
+Date TelemetryData::getDate()
+{
+	return this->date;
+}
+
+float TelemetryData::getFuelQuantity()
+{
+	return this->fuel;
+}
