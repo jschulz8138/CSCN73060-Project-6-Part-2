@@ -78,7 +78,12 @@ Date TelemetryData::getDate()
 	return this->date;
 }
 
-float TelemetryData::getFuelQuantity()
+float TelemetryData::getFuel()
 {
 	return this->fuel;
+}
+
+FuelType TelemetryData::getFuelType()
+{
+	return this->fuelType;
 }
