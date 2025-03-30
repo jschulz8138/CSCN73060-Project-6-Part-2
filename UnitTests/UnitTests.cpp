@@ -386,7 +386,7 @@ namespace UnitTests
 			// Verify first telemetry is correct
 			std::string firstDateString = firstTelemetry.getDate();
 			Assert::AreEqual(expectedFirstDate, firstDateString);
-			Assert::AreEqual(expectedFirstFuel, firstTelemetry.getFuelQuantity());
+			Assert::AreEqual(expectedFirstFuel, firstTelemetry.getFuel());
 
 			// iterate through all lines while counting them
 			int lineCount = 1; //starts at 1 since th first line was already read
@@ -399,7 +399,7 @@ namespace UnitTests
 			// Verify first telemetry is correct
 			std::string lastDateString = lastTelemetry.getDate();
 			Assert::AreEqual(expectedLastDate, lastDateString);
-			Assert::AreEqual(expectedLastFuel, lastTelemetry.getFuelQuantity());
+			Assert::AreEqual(expectedLastFuel, lastTelemetry.getFuel());
 
 			// Verify the correct amount of lines were read
 			// 8565 is the number of lines
