@@ -13,6 +13,9 @@ public:
 	size_t size() const;
 
 	bool validateTeletryData();
+
+	Date getDate();
+	float getFuelQuantity();
 private:
 	Date date;
 	float fuel;

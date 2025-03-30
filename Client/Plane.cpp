@@ -16,10 +16,6 @@ bool Plane::OpenFuelDataFile(std::string filename) {
     // Uses filename, not dynamic
     this->fuelType = filename == POUNDSPLANE ? FuelType::POUNDS : FuelType::GALLONS;
 
-    // skips the first line (header)
-    std::string line;
-    std::getline(this->telemetryFile, line);
-
     return true;
 }
 
@@ -32,11 +28,37 @@ bool Plane::GetNextFuelData() {
 
     // set up line reader
     std::string line;
+
+    // Skip the header if it is the first line
+    static bool firstRead = true;
+    if (firstRead) {
+        std::getline(this->telemetryFile, line);
+        std::istringstream ss(line);
+        std::string headerString, dateString, fuelString;
+        std::getline(ss, headerString, ','); // skip header
+
+        // split line between date and fuel
+        if (std::getline(ss, dateString, ',') && std::getline(ss, fuelString, ',')) {
+            try {
+                // store date and fuel quantity
+                this->telemetry = TelemetryData(dateString.c_str(), stof(fuelString), this->fuelType);
+                firstRead = false;
+                return true;
+            }
+            catch (std::exception e) {
+                std::cerr << "Error parsing telemetry. " << e.what() << std::endl;
+            }
+        }
+
+        firstRead = false;
+    }
+
     // iterate through every line, sorting data into parameters
     while (std::getline(this->telemetryFile, line)) {
         // initiate string stream for parsing
         std::istringstream ss(line);
         std::string dateString, fuelString;
+
         // split line between date and fuel
         if (std::getline(ss, dateString, ',') && std::getline(ss, fuelString, ',')) {
             try {
