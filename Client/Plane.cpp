@@ -67,3 +67,9 @@ FuelType Plane::GetFuelType()
 {
     return this->fuelType;
 }
+
+std::string Plane::operator[](int index)
+{
+    // returns planefile name from the array if the index is within the array.
+    return index < sizeof(this->planeFiles)/sizeof(this->planeFiles[0]) ? this->planeFiles[index] : "invalid file input";
+}
