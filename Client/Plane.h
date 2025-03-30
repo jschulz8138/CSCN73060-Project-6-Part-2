@@ -30,6 +30,7 @@ public:
 	std::string operator[](int index);
 
 private:
+	const char* WhiteSpace = " \t\v\r\n";
 	const std::string dataFilePath = "Data Files/";
 	TelemetryData telemetry;
 	FuelType fuelType;

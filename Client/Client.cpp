@@ -111,6 +111,9 @@ void Client::Run(const char* serverIp) {
 
     // reads through file if lines are left
     while (fileOpened && plane.GetNextFuelData()) {
+        std::string str = plane.GetTelemetry().getDate();
+        std::cout << str << std::endl;
+
         std::unique_ptr<Packet> dataPacket;
         try {
             dataPacket = PacketFactory::create(ProtocolFlag::SENDDATA, uniqueId, plane.GetTelemetry());

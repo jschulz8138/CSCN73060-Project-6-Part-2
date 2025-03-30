@@ -39,6 +39,11 @@ bool Plane::GetNextFuelData() {
 
         // split line between date and fuel
         if (std::getline(ss, dateString, ',') && std::getline(ss, fuelString, ',')) {
+
+            std::size_t start = dateString.find_first_not_of(WhiteSpace);
+            std::size_t end = dateString.find_last_not_of(WhiteSpace);
+            dateString = end ? dateString.substr(start, end - start + 1) : std::string();
+
             try {
                 // store date and fuel quantity
                 this->telemetry = TelemetryData(dateString.c_str(), stof(fuelString), this->fuelType);
@@ -61,6 +66,10 @@ bool Plane::GetNextFuelData() {
 
         // split line between date and fuel
         if (std::getline(ss, dateString, ',') && std::getline(ss, fuelString, ',')) {
+            std::size_t start = dateString.find_first_not_of(WhiteSpace);
+            std::size_t end = dateString.find_last_not_of(WhiteSpace);
+            dateString = end ? dateString.substr(start, end - start + 1) : std::string();
+
             try {
                 // store date and fuel quantity
                 this->telemetry = TelemetryData(dateString.c_str(), stof(fuelString), this->fuelType);
