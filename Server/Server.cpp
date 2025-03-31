@@ -17,7 +17,7 @@ Server::Server(const std::string& dbConnString, int port)
 	if (this->serverSocket == INVALID_SOCKET)
 		throw std::runtime_error("Failed to create socket.");
 
-	std::cout << "Connecting to: " << this->dbConnectionString << std::endl;
+	//std::cout << "Connecting to: " << this->dbConnectionString << std::endl;
 
 
 	for (int i = 0; i < std::thread::hardware_concurrency(); ++i) {
@@ -86,7 +86,7 @@ void Server::MainThread()
 		sockaddr_in clientAddr;
 		int clientAddrSize = sizeof(clientAddr);
 
-		std::cout << "Waiting for client..." << std::endl;
+		//std::cout << "Waiting for client..." << std::endl;
 		SOCKET clientSocket = accept(this->serverSocket, (sockaddr*)&clientAddr, &clientAddrSize);
 		if (clientSocket == INVALID_SOCKET) {
 			this->logger.logMessage("Failed to setup client socket. " + std::to_string(WSAGetLastError()));

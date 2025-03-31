@@ -14,7 +14,6 @@ struct ClientContext {
     bool isPrevTelemetryDataInitialized = false;
     
     ~ClientContext() {
-        std::cout << "destructor called" << std::endl;
         while (buffer.size() > 1) {
             buffer.pop_back();
         }
