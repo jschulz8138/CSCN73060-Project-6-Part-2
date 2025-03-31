@@ -1,6 +1,7 @@
 #pragma once
 #include <WinSock2.h>
 #include "../Shared/TelemetryData.h"
+#include <iostream>
 
 struct ClientContext {
     OVERLAPPED overlapped;
@@ -11,4 +12,11 @@ struct ClientContext {
 
     TelemetryData prevTelemetryData;
     bool isPrevTelemetryDataInitialized = false;
+
+    ~ClientContext(){ 
+        std::cout << "Destructor Called.";
+        while (buffer.size() > 0) {
+            buffer.pop_back();
+        }
+    }
 };

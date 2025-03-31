@@ -95,18 +95,19 @@ void Server::MainThread()
 
 		//Setup the client context struct.
 		int clientId = this->pds.generateNewId();
-		ClientContext* clientContext = new ClientContext();
+		std::shared_ptr<ClientContext> clientContext = std::make_shared<ClientContext>();
+
 		clientContext->clientSocket = clientSocket;
 		clientContext->buffer.resize(BUFFER_SIZE);
 		clientContext->wsaBuf.buf = clientContext->buffer.data();
 		clientContext->wsaBuf.len = BUFFER_SIZE;
 		ZeroMemory(&clientContext->overlapped, sizeof(OVERLAPPED));
 
-		if (CreateIoCompletionPort((HANDLE)clientSocket, this->hIOCP, (ULONG_PTR)clientContext, 0) == NULL) {
+		if (CreateIoCompletionPort((HANDLE)clientSocket, this->hIOCP, (ULONG_PTR)&clientContext, 0) == NULL) {
 			this->logger.logMessage("Failed to associate client socket with IOCP.");
 			shutdown(clientSocket, SD_SEND);
 			closesocket(clientSocket);
-			delete clientContext;
+			delete &clientContext;
 			continue;
 		}
 
@@ -126,8 +127,12 @@ void Server::MainThread()
 			this->logger.logMessage("Failed to send GENERATEID packet.");
 			shutdown(clientSocket, SD_SEND);
 			closesocket(clientSocket);
-			delete clientContext;
+			delete &clientContext;
 			continue;
+		}
+
+		while (serializedPacket.size() > 0) {
+			serializedPacket.pop_back();
 		}
 
 		//Post the first recv request before moving on to the next client.
@@ -139,7 +144,7 @@ void Server::MainThread()
 				this->logger.logMessage("WSARecv failed on first read. Closing connection. Code:" + std::to_string(errorCode));
 				shutdown(clientSocket, SD_SEND);
 				closesocket(clientSocket);
-				delete clientContext;
+				delete &clientContext;
 				continue;
 			}
 		}
@@ -151,6 +156,11 @@ void Server::MainThread()
 			worker.join();
 		}
 	}
+
+	while (workerThreads.size() > 0) {
+		workerThreads.pop_back();
+	}
+
 }
 
 //Proletariat
@@ -221,6 +231,7 @@ void Server::WorkerThread(int threadIndex)
 
 			break;
 		case ProtocolFlag::ENDCOMMUNICATION:
+			this->logger.logMessage("CLient has shutdown");
 			this->pds.storeAverageFuelConsumption(conn, receivedPacket->getId());
 			shutdown(clientContext->clientSocket, SD_SEND);
 			closesocket(clientContext->clientSocket);
@@ -248,6 +259,10 @@ void Server::WorkerThread(int threadIndex)
 				continue;
 			}
 		}
+	}
+
+	while (serializedAck.size() > 0) {
+		serializedAck.pop_back();
 	}
 }
 
