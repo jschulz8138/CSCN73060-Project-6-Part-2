@@ -156,13 +156,12 @@ void Server::MainThread()
 //Proletariat
 //Takes the packets and deals with them
 //One packet at a time, not one client at a time.
-void Server::WorkerThread(int threadIndex)
-{
-	auto& conn = *dbConnections[threadIndex];
+void Server::WorkerThread(int threadIndex) {
+	auto& conn = *dbConnections[threadIndex % dbConnections.size()];  // Use round-robin for database connections
 
-	DWORD bytesTranferred;
-	ClientContext* clientContext;
-	OVERLAPPED* overlapped;
+	constexpr int MAX_COMPLETIONS = 64;  // Process up to 64 events at once
+	OVERLAPPED_ENTRY completionEntries[MAX_COMPLETIONS];
+	DWORD numEntriesRemoved = 0;
 
 	std::unique_ptr<Packet> ackPacket;
 	try {
@@ -173,83 +172,90 @@ void Server::WorkerThread(int threadIndex)
 	}
 	std::vector<char> serializedAck = ackPacket->SerializeData();
 
-	while (true){
-		if (!GetQueuedCompletionStatus(this->hIOCP, &bytesTranferred, (PULONG_PTR)&clientContext, &overlapped, INFINITE)) {
-			this->logger.logMessage("Failure while dequeuing IOCP. Cleaning up the client connection.");
-			shutdown(clientContext->clientSocket, SD_SEND);
-			closesocket(clientContext->clientSocket);
-			delete clientContext;
+	while (true) {
+		numEntriesRemoved = 0;
+
+		// Try to dequeue multiple completions at once
+		if (!GetQueuedCompletionStatusEx(this->hIOCP, completionEntries, MAX_COMPLETIONS, &numEntriesRemoved, INFINITE, FALSE)) {
+			this->logger.logMessage("Failure while dequeuing IOCP. Cleaning up client connections.");
 			continue;
 		}
 
-		if(bytesTranferred == 0){
-			this->logger.logMessage("Client has disconnected. Cleaning up the client connection.");
-			shutdown(clientContext->clientSocket, SD_SEND);
-			closesocket(clientContext->clientSocket);
-			delete clientContext;
-			continue;
-		}
+		// Process each completion in batch
+		for (DWORD i = 0; i < numEntriesRemoved; ++i) {
+			ClientContext* clientContext = reinterpret_cast<ClientContext*>(completionEntries[i].lpCompletionKey);
+			OVERLAPPED* overlapped = completionEntries[i].lpOverlapped;
+			DWORD bytesTransferred = completionEntries[i].dwNumberOfBytesTransferred;
 
-		//Process the packet
-		std::unique_ptr<Packet> receivedPacket;
-		try {
-			receivedPacket = PacketFactory::create(clientContext->buffer);
-		}
-		catch (const std::exception& e) {
-			this->logger.logMessage("Failure while deserializing the recievedPacket");
-		}
-
-		//if (!receivedPacket->validateData()) {
-		//	this->logger.logMessage("Received packet has not been deserialized properly");
-		//  shutdown(clientContext->clientSocket, SD_SEND);
-		//	closesocket(clientContext->clientSocket);
-		//	delete clientContext;
-		//	continue;
-		//}
-
-		switch (receivedPacket->getFlag()) {
-		case ProtocolFlag::SENDDATA:
-			//If this is the first communciation, initialize the prevTimeStamp and prevTelemetryData
-			if (!clientContext->isPrevTelemetryDataInitialized) {
-				clientContext->prevTelemetryData = receivedPacket->getTelemetryData();
-				clientContext->isPrevTelemetryDataInitialized = true;
-			}
-			else {
-				this->pds.storeFuelConsumption(conn, receivedPacket->getId(), receivedPacket->getTelemetryData().getFuel() - clientContext->prevTelemetryData.getFuel(), clientContext->prevTelemetryData.getFuelType());
-				clientContext->prevTelemetryData = receivedPacket->getTelemetryData();
-			}
-
-			break;
-		case ProtocolFlag::ENDCOMMUNICATION:
-			this->pds.storeAverageFuelConsumption(conn, receivedPacket->getId());
-			shutdown(clientContext->clientSocket, SD_SEND);
-			closesocket(clientContext->clientSocket);
-			delete clientContext;
-			continue;
-		default:
-			this->logger.logMessage("Received packet with an unknown flag.");
-			shutdown(clientContext->clientSocket, SD_SEND);
-			closesocket(clientContext->clientSocket);
-			delete clientContext;
-			continue;
-		}
-
-		send(clientContext->clientSocket, serializedAck.data(), serializedAck.size(), 0);
-
-		ZeroMemory(&clientContext->overlapped, sizeof(OVERLAPPED));
-		DWORD flags = 0;
-		if (WSARecv(clientContext->clientSocket, &clientContext->wsaBuf, 1, nullptr, &flags, &clientContext->overlapped, nullptr) == SOCKET_ERROR) {
-			int errorCode = WSAGetLastError();
-			if (errorCode != WSA_IO_PENDING) {
-				this->logger.logMessage("WSARecv failed. Closing connection.");
+			if (bytesTransferred == 0) {
+				this->logger.logMessage("Client disconnected. Cleaning up the client connection.");
 				shutdown(clientContext->clientSocket, SD_SEND);
 				closesocket(clientContext->clientSocket);
 				delete clientContext;
 				continue;
 			}
-		}
-	}
+
+			// Process the received packet
+			std::unique_ptr<Packet> receivedPacket;
+			try {
+				receivedPacket = PacketFactory::create(clientContext->buffer);
+			}
+			catch (const std::exception& e) {
+				this->logger.logMessage("Failure while deserializing received packet.");
+				continue;
+			}
+
+			switch (receivedPacket->getFlag()) {
+			case ProtocolFlag::SENDDATA:
+				if (!clientContext->isPrevTelemetryDataInitialized) {
+					clientContext->prevTelemetryData = receivedPacket->getTelemetryData();
+					clientContext->isPrevTelemetryDataInitialized = true;
+				}
+				else {
+					this->pds.storeFuelConsumption(
+						conn, receivedPacket->getId(),
+						receivedPacket->getTelemetryData().getFuel() - clientContext->prevTelemetryData.getFuel(),
+						clientContext->prevTelemetryData.getFuelType()
+					);
+					clientContext->prevTelemetryData = receivedPacket->getTelemetryData();
+				}
+				break;
+
+			case ProtocolFlag::ENDCOMMUNICATION:
+				this->pds.storeAverageFuelConsumption(conn, receivedPacket->getId());
+				shutdown(clientContext->clientSocket, SD_SEND);
+				closesocket(clientContext->clientSocket);
+				delete clientContext;
+				continue;
+
+			default:
+				this->logger.logMessage("Received unknown packet flag. Closing connection.");
+				shutdown(clientContext->clientSocket, SD_SEND);
+				closesocket(clientContext->clientSocket);
+				delete clientContext;
+				continue;
+			}
+
+			// Send ACK
+			send(clientContext->clientSocket, serializedAck.data(), serializedAck.size(), 0);
+
+			// Reset the overlapped structure for the next I/O operation
+			ZeroMemory(&clientContext->overlapped, sizeof(OVERLAPPED));
+			DWORD flags = 0;
+			if (WSARecv(clientContext->clientSocket, &clientContext->wsaBuf, 1, nullptr, &flags, &clientContext->overlapped, nullptr) == SOCKET_ERROR) {
+				int errorCode = WSAGetLastError();
+				if (errorCode != WSA_IO_PENDING) {
+					this->logger.logMessage("WSARecv failed. Closing connection.");
+					shutdown(clientContext->clientSocket, SD_SEND);
+					closesocket(clientContext->clientSocket);
+					delete clientContext;
+					continue;
+				}
+			}
+		}  // End processing batch
+	}  // End while(true)
 }
+
 
 float Server::calculateFuelConsumption(TelemetryData previousTelemetryData, TelemetryData newTelemetryData)
 {
