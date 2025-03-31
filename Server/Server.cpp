@@ -95,7 +95,7 @@ void Server::MainThread()
 
 		//Setup the client context struct.
 		int clientId = this->pds.generateNewId();
-		std::shared_ptr<ClientContext> clientContext = std::make_shared<ClientContext>();
+		ClientContext* clientContext = new ClientContext();
 
 		clientContext->clientSocket = clientSocket;
 		clientContext->buffer.resize(BUFFER_SIZE);
