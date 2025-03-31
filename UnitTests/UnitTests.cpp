@@ -187,7 +187,7 @@ namespace UnitTests
 			pkts.push_back(PacketFactory::create(ProtocolFlag::ACK, 20, TelemetryData(Date("03_03_2021 15:26:2"), 0, POUNDS)));
 			pkts.push_back(PacketFactory::create(ProtocolFlag::ACK, 21, TelemetryData(Date("03_03_2021 15:26:2"), 0, POUNDS)));
 
-			for (int i = 0; i < pkts.size(); i++) {  void* ptr = &pkts[i]->getTelemetryData(); Assert::IsNotNull(ptr);  }
+			for (int i = 0; i < pkts.size(); i++) {	Assert::IsTrue(pkts[i]->validateData());  }
 		}
 		TEST_METHOD(PacketValidateTests)
 		{
