@@ -3,7 +3,7 @@
 
 int PlaneDataStorage::generateNewId()
 {
-    std::cout << "Assigning ID :" << this->currentID - 1 << std::endl;
+    //std::cout << "Assigning ID :" << this->currentID - 1 << std::endl;
 	return this->currentID++;
 }
 
