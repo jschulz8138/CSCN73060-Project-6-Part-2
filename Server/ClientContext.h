@@ -11,8 +11,7 @@ struct ClientContext {
     DWORD bytesReceived;
 
     TelemetryData prevTelemetryData;
-    bool isPrevTelemetryDataInitialized = false;
-    
+    bool isPrevTelemetryDataInitialized = false;   
     ~ClientContext() {
         while (buffer.size() > 1) {
             buffer.pop_back();
