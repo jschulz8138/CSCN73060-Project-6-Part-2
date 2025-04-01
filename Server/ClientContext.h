@@ -11,11 +11,9 @@ struct ClientContext {
     DWORD bytesReceived;
 
     TelemetryData prevTelemetryData;
-    bool isPrevTelemetryDataInitialized = false;
-
-    ~ClientContext(){ 
-        std::cout << "Destructor Called.";
-        while (buffer.size() > 0) {
+    bool isPrevTelemetryDataInitialized = false;   
+    ~ClientContext() {
+        while (buffer.size() > 1) {
             buffer.pop_back();
         }
     }

@@ -1,7 +1,9 @@
 #include "PlaneDataStorage.h"
+#include <iostream>
 
 int PlaneDataStorage::generateNewId()
 {
+    //std::cout << "Assigning ID :" << this->currentID - 1 << std::endl;
 	return this->currentID++;
 }
 
@@ -61,6 +63,7 @@ bool PlaneDataStorage::storeAverageFuelConsumption(pqxx::connection& conn, int i
 bool PlaneDataStorage::insert(pqxx::connection& conn, const std::string& table, const std::vector<std::string>& columns, const std::vector<std::string>& values)
 {
     if (columns.size() != values.size()) {
+        std::cout << "Bad Size" << std::endl;
         return false;
     }
 
@@ -83,6 +86,7 @@ bool PlaneDataStorage::insert(pqxx::connection& conn, const std::string& table, 
         return true;
     }
     catch (const std::exception& e) {
+        std::cout << "err:" << e.what() << std::endl;
         return false;
     }
 
@@ -138,7 +142,33 @@ bool PlaneDataStorage::setupDatabaseTables(pqxx::connection& conn)
         txn.commit();
     }
     catch (const std::exception& e) {
+        std::cout << "Setup failed:"<< e.what() << std::endl;
         return false;
     }
+    std::cout << "Database Table Setup succeeded" << std::endl;
+    return true;
+}
+
+bool PlaneDataStorage::setupData(pqxx::connection& conn)
+{
+    try {
+        pqxx::work txn(conn);
+        pqxx::result result = txn.exec("SELECT MAX(id) FROM average_fuel_consumption;");
+
+        if (!result.empty() && !result[0][0].is_null()) {
+            this->currentID = result[0][0].as<int>() + 1; // next available ID
+        }
+        else {
+            this->currentID = 1; // start from 1 if table is empty
+        }
+
+        txn.commit();
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Failed to initialize currentID from database: " << e.what() << std::endl;
+        this->currentID = 1; // fallback
+        return false;
+    }
+    std::cout << "Database ID Setup succeeded." << std::endl;
     return true;
 }

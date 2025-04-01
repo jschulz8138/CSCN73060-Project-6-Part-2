@@ -25,7 +25,7 @@ bool Client::Connect(const char* serverIp) {
     if (connect(this->clientSocket, (sockaddr*)&serverAddr, sizeof(serverAddr)) != 0)
         return false;
 
-    std::cout << "Connected to server." << std::endl;
+    //std::cout << "Connected to server." << std::endl;
     return true;
 }
 
@@ -112,7 +112,7 @@ void Client::Run(const char* serverIp) {
     // reads through file if lines are left
     while (fileOpened && plane.GetNextFuelData()) {
         std::string str = plane.GetTelemetry().getDate();
-        std::cout << str << std::endl;
+        //std::cout << str << std::endl;
 
         std::unique_ptr<Packet> dataPacket;
         try {
@@ -126,8 +126,8 @@ void Client::Run(const char* serverIp) {
 
         // Wait for acknowledgment
         std::unique_ptr<Packet> ackPacket = ReceivePacket();
-        if (ackPacket->getFlag() == ProtocolFlag::ACK)
-            std::cout << "Received ACK for packet" << std::endl;
+        //if (ackPacket->getFlag() == ProtocolFlag::ACK)
+            //std::cout << "Received ACK for packet" << std::endl;
     }
 
     // End communication
