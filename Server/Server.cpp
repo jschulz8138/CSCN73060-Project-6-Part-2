@@ -36,6 +36,7 @@ Server::Server(const std::string& dbConnString, int port)
 	}
 
 	this->pds.setupDatabaseTables(*this->dbConnections[0]);
+	this->pds.setupData(*this->dbConnections[0]);
 
 
 	sockaddr_in serverAddr = {};

@@ -13,6 +13,7 @@ public:
 	bool storeFuelConsumption(pqxx::connection& conn, int id, float fuelConsumption, FuelType fuelType);
 	bool storeAverageFuelConsumption(pqxx::connection& conn, int id);
 	bool setupDatabaseTables(pqxx::connection& conn);
+	bool setupData(pqxx::connection& conn);
 	
 
 private:
