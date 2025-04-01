@@ -9,6 +9,7 @@ Server::Server(const std::string& dbConnString, int port)
 {
 	this->port = port;
 	this->dbConnectionString = dbConnString;
+	
 
 	if (WSAStartup(MAKEWORD(2, 2), &this->wsaData) != 0)
 		throw std::runtime_error("Failed to start up WSA.");
@@ -17,7 +18,7 @@ Server::Server(const std::string& dbConnString, int port)
 	if (this->serverSocket == INVALID_SOCKET)
 		throw std::runtime_error("Failed to create socket.");
 
-	//std::cout << "Connecting to: " << this->dbConnectionString << std::endl;
+	std::cout << "Connecting to database: " << this->dbConnectionString << std::endl;
 
 
 	for (int i = 0; i < std::thread::hardware_concurrency(); ++i) {
@@ -33,6 +34,8 @@ Server::Server(const std::string& dbConnString, int port)
 			throw std::runtime_error("Database connection error: " + std::string(ex.what()));
 		}
 	}
+
+	this->pds.setupDatabaseTables(*this->dbConnections[0]);
 
 
 	sockaddr_in serverAddr = {};
@@ -86,7 +89,7 @@ void Server::MainThread()
 		sockaddr_in clientAddr;
 		int clientAddrSize = sizeof(clientAddr);
 
-		//std::cout << "Waiting for client..." << std::endl;
+		std::cout << "Waiting for client..." << std::endl;
 		SOCKET clientSocket = accept(this->serverSocket, (sockaddr*)&clientAddr, &clientAddrSize);
 		if (clientSocket == INVALID_SOCKET) {
 			this->logger.logMessage("Failed to setup client socket. " + std::to_string(WSAGetLastError()));

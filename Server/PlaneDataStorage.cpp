@@ -1,4 +1,5 @@
 #include "PlaneDataStorage.h"
+#include <iostream>
 
 int PlaneDataStorage::generateNewId()
 {
@@ -61,6 +62,7 @@ bool PlaneDataStorage::storeAverageFuelConsumption(pqxx::connection& conn, int i
 bool PlaneDataStorage::insert(pqxx::connection& conn, const std::string& table, const std::vector<std::string>& columns, const std::vector<std::string>& values)
 {
     if (columns.size() != values.size()) {
+        std::cout << "Bad Size" << std::endl;
         return false;
     }
 
@@ -83,6 +85,7 @@ bool PlaneDataStorage::insert(pqxx::connection& conn, const std::string& table, 
         return true;
     }
     catch (const std::exception& e) {
+        std::cout << "err:" << e.what() << std::endl;
         return false;
     }
 
@@ -138,7 +141,9 @@ bool PlaneDataStorage::setupDatabaseTables(pqxx::connection& conn)
         txn.commit();
     }
     catch (const std::exception& e) {
+        std::cout << "Setup failed:"<< e.what() << std::endl;
         return false;
     }
+    std::cout << "Setup succeeded" << std::endl;
     return true;
 }
