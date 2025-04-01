@@ -90,7 +90,7 @@ void Server::MainThread()
 		sockaddr_in clientAddr;
 		int clientAddrSize = sizeof(clientAddr);
 
-		std::cout << "Waiting for client..." << std::endl;
+		//std::cout << "Waiting for client..." << std::endl;
 		SOCKET clientSocket = accept(this->serverSocket, (sockaddr*)&clientAddr, &clientAddrSize);
 		if (clientSocket == INVALID_SOCKET) {
 			this->logger.logMessage("Failed to setup client socket. " + std::to_string(WSAGetLastError()));
