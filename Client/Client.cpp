@@ -98,7 +98,7 @@ void Client::Run(const char* serverIp) {
     // Receive Unique ID from Server
     std::unique_ptr<Packet> idPacket = ReceivePacket();
     int uniqueId = idPacket->getId();
-    //std::cout << "Received Unique ID: " << uniqueId << std::endl;
+    std::cout << "Received Unique ID: " << uniqueId << std::endl;
   
     // set up telemetry reading class
     Plane plane;
@@ -143,5 +143,5 @@ void Client::Run(const char* serverIp) {
 
     //There might need to be client cleanup here? I don't remember.
 
-    //std::cout << "Communication ended." << std::endl;
+    std::cout << "Communication ended." << std::endl;
 }
