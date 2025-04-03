@@ -3,6 +3,9 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+#Ignore the Diagnostic files
+Diagnostics/
+
 # User-specific files
 *.rsuser
 *.suo

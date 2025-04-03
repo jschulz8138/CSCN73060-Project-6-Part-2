@@ -56,9 +56,6 @@ bool SendPacket::validateData()
 	
 // ********** GETTERS **********
 ProtocolFlag SendPacket::getFlag() const {
-	std::ofstream MyFile("filename.txt");
-	MyFile << this->protocolFlag;
-	MyFile.close();
 	return this->protocolFlag;
 }
 
