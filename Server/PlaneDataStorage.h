@@ -20,7 +20,6 @@ private:
 	std::atomic<int> currentID = 1;
 
 	//PostGRE database methods
-	bool insert(pqxx::connection& conn, const std::string& table, const std::vector<std::string>& columns, const std::vector<std::string>& values);	
-	bool select(pqxx::connection& conn, const std::string& table, const std::string& condition, pqxx::result& result);
-	
+	bool insert(pqxx::connection& conn, const std::string& table, const std::vector<std::string>& columns, const std::vector<std::string>& values);
+	bool select(pqxx::connection& conn, const std::string& select, const std::string& table, const std::string& condition, pqxx::result& result);
 };

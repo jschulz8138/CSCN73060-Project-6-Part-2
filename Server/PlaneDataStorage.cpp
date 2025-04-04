@@ -29,36 +29,54 @@ bool PlaneDataStorage::storeFuelConsumption(pqxx::connection& conn, int id, floa
     );
 }
 
+//
+//bool PlaneDataStorage::storeAverageFuelConsumption(pqxx::connection& conn, int id)
+//{
+//    pqxx::result result;
+//
+//    //Select the fuel consumption values for the ID
+//    if (!select(conn, "*", "fuel_consumption", "id = " + std::to_string(id), result)) {
+//        return false;  // No data found
+//    }
+//
+//    float totalFuel = 0.0f;
+//    int count = 0;
+//
+//    //Calculate the average fuel consumption
+//    for (auto row : result) {
+//        if (!row["fuel_consumed"].is_null()) {
+//            totalFuel += row["fuel_consumed"].as<float>();
+//            count++;
+//        }
+//    }
+//
+//    // Insert the average into the database
+//    return count == 0 ? false : insert(
+//        conn,
+//        "average_fuel_consumption",
+//        { "id", "avg_fuel_consumed" },
+//        { std::to_string(id), std::to_string(totalFuel / count) }
+//    );
+//}
 
 bool PlaneDataStorage::storeAverageFuelConsumption(pqxx::connection& conn, int id)
 {
     pqxx::result result;
-
-    //Select the fuel consumption values for the ID
-    if (!select(conn, "fuel_consumption", "id = " + std::to_string(id), result)) {
-        return false;  // No data found
+    if (!select(conn, "AVG(fuel_consumed)", "fuel_consumption", "id = "+ std::to_string(id), result)) {
+        return false;
     }
 
-    float totalFuel = 0.0f;
-    int count = 0;
-
-    //Calculate the average fuel consumption
-    for (auto row : result) {
-        if (!row["fuel_consumed"].is_null()) {
-            totalFuel += row["fuel_consumed"].as<float>();
-            count++;
-        }
+    if (!result.empty() && !result[0][0].is_null()) {
+        std::cout << "Average: " << result[0][0].c_str() << std::endl;
+        return insert(
+            conn,
+            "average_fuel_consumption",
+            { "id", "avg_fuel_consumed" },
+            { std::to_string(id), result[0][0].c_str() }
+        );
     }
-
-    // Insert the average into the database
-    return count == 0 ? false : insert(
-        conn,
-        "average_fuel_consumption",
-        { "id", "avg_fuel_consumed" },
-        { std::to_string(id), std::to_string(totalFuel / count) }
-    );
+    return false;
 }
-
 
 bool PlaneDataStorage::insert(pqxx::connection& conn, const std::string& table, const std::vector<std::string>& columns, const std::vector<std::string>& values)
 {
@@ -92,11 +110,11 @@ bool PlaneDataStorage::insert(pqxx::connection& conn, const std::string& table, 
 
 }
 
-bool PlaneDataStorage::select(pqxx::connection& conn, const std::string& table, const std::string& condition, pqxx::result& result)
+bool PlaneDataStorage::select(pqxx::connection& conn, const std::string& select, const std::string& table, const std::string& condition, pqxx::result& result)
 {
     try {
         pqxx::work txn(conn);
-        std::string sql = "SELECT * FROM " + table + " WHERE " + condition + ";";
+        std::string sql = "SELECT " + select + " FROM " + table + " WHERE " + condition + ";";
 
         result = txn.exec(sql);
 
