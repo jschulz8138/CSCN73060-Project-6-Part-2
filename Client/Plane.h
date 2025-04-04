@@ -7,7 +7,7 @@
 #include "..\Shared\FuelType.h"
 #include "..\Shared\TelemetryData.h"
 
-#define NUM_OF_PLANE_FILES 4
+#define NUM_OF_PLANE_FILES 1
 
 class Plane
 {
@@ -37,10 +37,10 @@ private:
 	std::ifstream telemetryFile;
 
 	const std::string planeFiles[NUM_OF_PLANE_FILES] = {
-		"katl-kefd-B737-700.txt",
-		"Telem_2023_3_12 14_56_40.txt",
+		//"katl-kefd-B737-700.txt",
+		//"Telem_2023_3_12 14_56_40.txt",
 		"Telem_2023_3_12 16_26_4.txt",
-		"Telem_czba-cykf-pa28-w2_2023_3_1 12_31_27.txt"
+		//"Telem_czba-cykf-pa28-w2_2023_3_1 12_31_27.txt"
 	};
 
 };
