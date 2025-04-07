@@ -107,7 +107,7 @@ void Client::Run(const char* serverIp) {
 
 
     // tries to open files, doesn't read if unsuccessful
-    fileOpened = plane.OpenFuelDataFile(plane[uniqueId%4]) ? true : false;
+    fileOpened = plane.OpenFuelDataFile(plane[0]) ? true : false;
 
     // reads through file if lines are left
     while (fileOpened && plane.GetNextFuelData()) {
